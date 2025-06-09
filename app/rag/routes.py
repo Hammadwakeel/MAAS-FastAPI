@@ -22,6 +22,9 @@ from .utils import (
 )
 from .logging_config import logger
 
+from .chat_history import ChatHistoryManager
+from .logging_config import logger
+
 router = APIRouter(prefix="/rag", tags=["rag"])
 
 @router.post("/ingest/{user_id}", response_model=IngestResponse)
@@ -92,32 +95,32 @@ async def create_chat_session(user_id: str):
         logger.error("Error creating chat for user_id=%s: %s", user_id, e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to create chat session: {e}")
 
+
 @router.post("/chat/{user_id}/{chat_id}", response_model=ChatResponse)
 async def chat_with_user(user_id: str, chat_id: str, body: ChatRequest):
-    """
-    Send a user question to the RAG chain and return the LLM answer.
-    - Loads the FAISS index for user_id (404 if not found).
-    - Retrieves (or initializes) the MongoDBChatMessageHistory for chat_id.
-    - Runs the ConversationalRetrievalChain to get an answer.
-    - Returns the answer, plus re‐stores chat history in Mongo automatically.
-    """
-    question = body.question
-    logger.info("Received chat request: user_id=%s, chat_id=%s, question='%s'", user_id, chat_id, question)
+    question = body.question.strip()
+    logger.info("Chat request user=%s chat=%s question=%s", user_id, chat_id, question)
 
     try:
-        # 1. Build the RAG chain (or 404 if no vectorstore)
+        # 1) Ensure session exists
+        ChatHistoryManager.create_session(chat_id)
+
+        # 2) Summarize long histories
+        ChatHistoryManager.summarize_if_needed(chat_id, threshold=10)
+
+        # 3) Record the user message
+        ChatHistoryManager.add_message(chat_id, role="human", content=question)
+
+        # 4) Build and invoke the RAG chain
         chain = build_rag_chain(user_id, chat_id)
+        history = ChatHistoryManager.get_messages(chat_id)
+        result = chain.invoke({"question": question, "chat_history": history})
+        answer = result.get("answer") or result.get("output_text")
+        if not answer:
+            raise Exception("No answer returned from chain")
 
-        # 2. Call the chain
-        result = chain.invoke({"question": question})
-        # Some chains use "answer", some use "output_text"
-        answer = result.get("answer") or result.get("output_text") or None
-
-        if answer is None:
-            logger.error("Chain returned no 'answer' or 'output_text': %s", result)
-            raise Exception("Failed to retrieve answer from chain.")
-
-        logger.info("Chain answered for chat_id=%s: %s", chat_id, answer)
+        # 5) Record the AI response
+        ChatHistoryManager.add_message(chat_id, role="ai", content=answer)
 
         return ChatResponse(
             success=True,
@@ -126,11 +129,11 @@ async def chat_with_user(user_id: str, chat_id: str, body: ChatRequest):
             chat_id=chat_id,
             user_id=user_id
         )
+
     except HTTPException:
-        # Re‐raise known HTTPExceptions (e.g. 404 from build_rag_chain)
         raise
     except Exception as e:
-        logger.error("Error in chat endpoint for user_id=%s, chat_id=%s: %s", user_id, chat_id, e, exc_info=True)
+        logger.error("Error chatting user=%s chat=%s: %s", user_id, chat_id, e, exc_info=True)
         return ChatResponse(
             success=False,
             answer=None,
