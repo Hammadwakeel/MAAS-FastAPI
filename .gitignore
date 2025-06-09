@@ -1,0 +1,77 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+.myenv/
+.myenv*/  # just in case named differently
+.env
+.env.*
+
+# VS Code
+.vscode/
+
+# Pytest
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# FastAPI / Uvicorn logs
+*.log
+
+# Cache
+.cache/
+*.sqlite3
+
+# Streamlit specific
+.streamlit/config.toml
+.streamlit/secrets.toml
+
+# FAISS vector store
+*.faiss*
+*.pkl
+*.index
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Docker artifacts
+__pycache__/
+*.tar
+*.pid
+*.sock
+*.db
+*.log
+
+# Python egg metadata
+*.egg-info/
+*.egg
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Coverage reports
+htmlcov/
+.coverage
+.tox/
+
+# Test artifacts
+tests/__pycache__/
+*.cover
+
+# IDEs
+.idea/
+*.iml
+
+# Node.js modules
+node_modules/
+
+# Custom virtual environments
+myenv/myenv/
