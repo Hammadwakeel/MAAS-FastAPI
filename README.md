@@ -64,7 +64,37 @@ PORT=8000
 DEBUG=True
 ```
 
-### 3. Run the Application
+## 2. Create & Activate Virtual Environment
+
+### Windows (PowerShell)
+```powershell
+# Create venv folder named `.venv`
+python -m venv .venv
+
+# Activate it
+.venv\Scripts\Activate.ps1
+````
+
+### Linux / macOS (bash/zsh)
+
+```bash
+# Create venv folder named .venv
+python3 -m venv .venv
+
+# Activate it
+source .venv/bin/activate
+```
+
+> **Tip:** On macOS you may need to run `chmod +x .venv/bin/activate` first if you get a permission error.
+
+### 3. Install Dependencies
+
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+## 4. Run the Application
 
 ```bash
 # Option 1: Using the script
@@ -72,6 +102,11 @@ python run_server.py
 
 # Option 2: Directly with uvicorn
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+```
+
+You can adjust numbering to fit your existing sections. Let me know if you’d like any tweaks!
 ```
 
 ---
@@ -210,14 +245,8 @@ docker run -p 8000:8000 --env-file .env maas-api
 
 ---
 
-## 📜 License
-
-Licensed under the MIT License.
-
----
-
 ## 🔗 Repository
 
-[https://github.com/Hammadwakeel/MAAS](https://github.com/Hammadwakeel/MAAS)
+[https://github.com/Hammadwakeel/MAAS](https://github.com/Hammadwakeel/MAAS-FastAPI.git)
 
 ---
