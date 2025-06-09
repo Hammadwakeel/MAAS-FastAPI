@@ -27,12 +27,14 @@ A professional FastAPI application that offers two core services:
 ```
 MAAS/
 ├── app/
-│   ├── rag/                         # RAG module for document ingestion and chat
+│   ├── rag/                        # RAG module for document ingestion and chat
 │   │   ├── db.py
 │   │   ├── embedding.py
 │   │   ├── routes.py               # RAG API endpoints
 │   │   ├── schemas.py
 │   │   └── utils.py
+│   │   └── chat_history.py         # chat history persistence
+
 │   ├── config.py                   # Environment & settings
 │   ├── main.py                     # FastAPI app instance & routers
 │   ├── models.py                   # Pydantic models
