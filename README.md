@@ -104,13 +104,6 @@ python run_server.py
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-```
-
-You can adjust numbering to fit your existing sections. Let me know if you’d like any tweaks!
-```
-
----
-
 ## 📘 API Overview
 
 ### 🔗 General
