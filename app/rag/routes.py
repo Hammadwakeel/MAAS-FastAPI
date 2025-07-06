@@ -97,7 +97,7 @@ async def create_chat_session(user_id: str):
 
 
 @router.post("/chat/{user_id}/{chat_id}", response_model=ChatResponse)
-async def chat_with_user(user_id: str, chat_id: str, body: ChatRequest):
+async def chat_with_user(user_id: str, chat_id: str, prompt_type:str, body: ChatRequest):
     question = body.question.strip()
     logger.info("Chat request user=%s chat=%s question=%s", user_id, chat_id, question)
 
@@ -112,7 +112,7 @@ async def chat_with_user(user_id: str, chat_id: str, body: ChatRequest):
         ChatHistoryManager.add_message(chat_id, role="human", content=question)
 
         # 4) Build and invoke the RAG chain
-        chain = build_rag_chain(user_id, chat_id)
+        chain = build_rag_chain(user_id, chat_id , prompt_type)
         history = ChatHistoryManager.get_messages(chat_id)
         result = chain.invoke({"question": question, "chat_history": history})
         answer = result.get("answer") or result.get("output_text")

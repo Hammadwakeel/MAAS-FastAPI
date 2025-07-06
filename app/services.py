@@ -117,87 +117,106 @@ class PageSpeedService:
     def _create_analysis_prompt(self, pagespeed_data: Dict[Any, Any]) -> str:
         """
         Create the specialized prompt for Gemini analysis.
-        
+
         Args:
             pagespeed_data (Dict[Any, Any]): PageSpeed Insights data
-            
+
         Returns:
             str: Formatted prompt for Gemini
         """
-        # We do not log full JSON here to avoid huge payload in logs,
-        # but we do log that prompt construction is happening.
         logger.debug("Building Gemini analysis prompt from PageSpeed data.")
-        return (
-            "**Role:** You are an **Expert Web Performance Optimization Analyst and Senior Full-Stack Engineer** "
-            "with deep expertise in interpreting Google PageSpeed Insights data, diagnosing frontend and "
-            "backend bottlenecks, and devising actionable, high-impact optimization strategies.\n\n"
-            "**Objective:**\n"
-            "Analyze the provided Google PageSpeed Insights JSON data for the analyzed website. "
-            "Your primary goal is to generate a comprehensive, prioritized, and actionable set of strategies "
-            "to significantly improve its performance. These strategies must directly address the specific "
-            "metrics and audit findings within the report, aiming to elevate both Core Web Vitals "
-            "(LCP, INP, CLS) and other key performance indicators (FCP, TTFB, TBT), and ultimately "
-            "improve the `overall_category` to 'FAST' where possible.\n\n"
-            "**Input Data:**\n"
-            "The following JSON object contains the complete PageSpeed Insights report:\n"
-            f"```json\n{json.dumps(pagespeed_data, indent=2)}\n```\n\n"
-            "**Analysis and Strategy Formulation - Instructions:**\n\n"
-            "1.  **Executive Performance Summary:**\n"
-            "    * Begin with a concise overview of the website's current performance status based on the provided data.\n"
-            "    * Highlight the `overall_category` for both `loadingExperience` (specific URL) and `originLoadingExperience` (entire origin).\n"
-            "    * Pinpoint the current values and `category` (e.g., FAST, AVERAGE, SLOW) for each key metric:\n"
-            "        * `CUMULATIVE_LAYOUT_SHIFT_SCORE` (CLS)\n"
-            "        * `EXPERIMENTAL_TIME_TO_FIRST_BYTE` (TTFB)\n"
-            "        * `FIRST_CONTENTFUL_PAINT_MS` (FCP)\n"
-            "        * `INTERACTION_TO_NEXT_PAINT` (INP)\n"
-            "        * `LARGEST_CONTENTFUL_PAINT_MS` (LCP)\n"
-            "        * `total-blocking-time` (TBT) from Lighthouse.\n"
-            "    * Identify any significant `metricSavings` opportunities highlighted in the Lighthouse `audits`.\n\n"
-            "2.  **Deep-Dive into Bottlenecks & Audit Failures:**\n"
-            "    * Systematically go through the `loadingExperience`, `originLoadingExperience`, and `lighthouseResult` (especially the `audits` section).\n"
-            "    * For each underperforming metric or failed/suboptimal audit (e.g., Lighthouse scores less than 1, or `notApplicable` audits with clear improvement paths like `lcp-lazy-loaded`, `critical-request-chains`, `dom-size`, `non-composited-animations`), extract the relevant details, display values, and numeric values.\n\n"
-            "3.  **Develop Prioritized, Actionable Optimization Strategies:**\n"
-            "    For *each* identified performance issue or opportunity, provide the following:\n"
-            "    * **A. Issue & Evidence:** Clearly state the problem (e.g., \"High Total Blocking Time,\" \"Suboptimal Largest Contentful Paint due to unoptimized image,\" \"Excessive DOM Size,\" \"Render-blocking resources in critical request chain\"). Refer directly to the JSON data points and audit IDs that support this finding (e.g., `audits['total-blocking-time'].numericValue`, `audits['critical-request-chains'].details.longestChain`).\n"
-            "    * **B. Root Cause Analysis (Inferred):** Briefly explain the likely technical reasons behind the issue based on the data.\n"
-            "    * **C. Specific, Technical Recommendation(s):** Provide detailed, actionable steps a development team can take. Be specific.\n"
-            "    * **D. Targeted Metric Improvement:** Specify which primary and secondary metrics this strategy will positively impact (e.g., \"This will directly reduce LCP and improve FCP,\" or \"This will significantly lower TBT and improve INP.\").\n"
-            "    * **E. Priority Level:** Assign a priority (High, Medium, Low) based on:\n"
-            "        * Impact on Core Web Vitals.\n"
-            "        * Potential for overall score improvement (consider `metricSavings`).\n"
-            "        * Severity of the issue (e.g., 'SLOW' or 'AVERAGE' categories).\n"
-            "        * Estimated implementation effort (favor high-impact, low/medium-effort tasks for higher priority).\n"
-            "    * **F. Justification for Priority:** Briefly explain why this priority was assigned.\n\n"
-            "4.  **Strategic Grouping (Optional but Recommended):**\n"
-            "    If applicable, group recommendations by area (e.g., Asset Optimization, JavaScript Optimization, Server-Side Improvements, Rendering Path Optimization, CSS Enhancements).\n\n"
-            "5.  **Anticipated Overall Impact:**\n"
-            "    Conclude with a statement on the anticipated overall improvement in performance and user experience if the high and medium-priority recommendations are implemented.\n\n"
-            "**Output Format:**\n"
-            "Please structure your response clearly. Use headings, subheadings, and bullet points to enhance readability and actionability. For example:\n\n"
-            "---\n"
-            "## Executive Performance Summary\n"
-            "* **Overall URL Loading Experience Category:** [e.g., AVERAGE]\n"
-            "* **Overall Origin Loading Experience Category:** [e.g., AVERAGE]\n"
-            "* **Key Metrics:**\n"
-            "    * LCP: [Value] ms ([Category])\n"
-            "    * INP: [Value] ms ([Category])\n"
-            "    * ...etc.\n\n"
-            "---\n"
-            "## Prioritized Optimization Strategies\n\n"
-            "### High Priority\n"
-            "**1. Issue & Evidence:** [e.g., High Total Blocking Time (TBT) of 1200 ms - `audits['total-blocking-time'].numericValue`]\n"
-            "    * **Root Cause Analysis:** [e.g., Long JavaScript tasks on the main thread during page load, likely from unoptimized third-party scripts or complex component rendering.]\n"
-            "    * **Specific, Technical Recommendation(s):**\n"
-            "        * [Action 1]\n"
-            "        * [Action 2]\n"
-            "    * **Targeted Metric Improvement:** [e.g., TBT, INP, FCP]\n"
-            "    * **Justification for Priority:** [e.g., Directly impacts interactivity (INP) and is a significant contributor to a poor lab score.]\n\n"
-            "**(Continue with other High, Medium, and Low priority items)**\n"
-            "---\n\n"
-            "**Ensure your analysis is based *solely* on the provided JSON data and your expert interpretation of it. "
-            "Avoid generic advice; all recommendations must be tied to specific findings within the report. "
-            "Do not add anything irrelevant in the report. Do not write text in the starting of the report**"
-        )
+        return f"""
+    You are an **Expert Web Performance Optimization Consultant**. The following JSON `{{PSI_DATA}}` contains exactly these keys (all required):
+
+    ```
+    {{
+    "url": string,  // analyzed page URL
+    "origin": string,  // origin domain
+    "loading_experience": {{  // Chrome UX data for URL
+        "overall_category": "FAST"|"AVERAGE"|"SLOW",
+        "metrics": {{
+        "CLS": {{ "percentile": number, "category": string }},
+        "TTFB": {{ "percentile": number, "category": string }},
+        "FCP": {{ "percentile": number, "category": string }},
+        "INP": {{ "percentile": number, "category": string }}
+        }}
+    }},
+    "origin_loading_experience": {{  // Chrome UX data for origin
+        "overall_category": "FAST"|"AVERAGE"|"SLOW"
+    }},
+    "lighthouse_audits": [  // only audits with score <1 or notApplicable
+        {{
+        "id": string,  // audit identifier
+        "numeric_value": number,  // ms or unit value
+        "score": number|null,  // 0–1 or null if N/A
+        "description": string,  // audit title/description
+        "details": {{  // optional details for resource URLs
+            "items": [ {{ "url": string }} ]
+        }},
+        "metric_savings_ms"?: number  // if available
+        }}
+    ]
+    }}
+    ```
+
+    Your job: output **exactly** the following JSON report—no extra keys, no prose outside these structures:
+
+    ```json
+    {{
+    "overall_score": integer,
+    "grade": "A"|"B"|"C"|"D"|"F",
+    "summary": {{
+        "CLS": {{ "value": number, "category": string }},
+        "TTFB": {{ "value": number, "category": string }},
+        "FCP": {{ "value": number, "category": string }},
+        "INP": {{ "value": number, "category": string }},
+        "LCP": {{ "value": number, "score": number }},
+        "TBT": {{ "value": number, "score": number }}
+    }},
+    "top_issues": [string],
+    "top_opportunities": [string],
+    "audits": [
+        {{
+        "id": string,
+        "value": number,
+        "score": number|null,
+        "resource_url"?: string,  // first offending URL from details.items
+        "status": "critical"|"needs_improvement"|"good",
+        "recommendation": string,
+        "expected_gain_s": number
+        }}
+    ],
+    "action_plan": [
+        {{
+        "id": string,
+        "fix": string,
+        "platform_tip"?: string,  // e.g. Next.js `next/image` or WordPress-specific advice
+        "effort": "low"|"medium"|"high"
+        }}
+    ],
+    "monitoring": {{
+        "frequency": string,
+        "methods": [string],
+        "ci_snippet"?: string  // optional GitHub Action or Lighthouse CI config
+    }}
+    }}``` 
+    **Requirements:**
+    - **Strict Mapping:** Every field derives from `{{PSI_DATA}}` (use JSON paths like `lighthouseResult.audits[...].numeric_value`).
+    - **No Extra Text:** Only the JSON above.
+    - **Tie to JSON Paths:** Include resource URLs via `details.items[0].url`.
+    - **Exact Code Snippets:** Provide `<link rel="preload"...>` or `<script defer>` snippets.
+    - **Quantify Impact:** Use `metric_savings_ms` for each audit to calculate `expected_gain_s`.
+    - **Threshold Targets:** State target values, e.g. "Reduce LCP to ≤1200 ms".
+    - **Platform‑Specific Tips:** If known, include stack advice, e.g. Next.js `next/image` or WordPress plugins.
+    - **Monitoring CI:** Optionally include a GitHub Action snippet:
+    ```yaml
+    - uses: treosh/lighthouse-ci-action@v5
+        with:
+        configPath: .lighthouserc.json
+    ```
+    - **Deterministic Scoring & Priority:** Same as before.
+    """
+
     
     def analyze_url(self, url: str) -> Dict[str, Any]:
         """
@@ -257,19 +276,45 @@ class PageSpeedService:
         try:
             model = genai.GenerativeModel("gemini-2.0-flash")
 
-            prompt = (
-                "You are an expert web performance analyst.\n"
-                "Extract and organize the optimization recommendations from the following performance report\n"
-                "into a JSON object with exactly these keys: \"high\", \"medium\", \"low\", and \"unknown\".\n"
-                "Each key’s value should be a list of suggestion strings.\n\n"
-                "Important:\n"
-                "- Respond with *only* a valid JSON object.\n"
-                "- Do NOT include any commentary or explanation outside the JSON.\n\n"
-                "Performance Report:\n"
-                "```\n"
-                + report +
-                "\n```"
-            )
+            prompt = f"""
+You are an **Expert Web Performance Analyst & Optimization Engineer**.
+
+Your task is to carefully analyze the provided PageSpeed Insights performance report.
+Extract **all** optimization recommendations and organize them into a JSON object with exactly these keys:
+  - "high"
+  - "medium"
+  - "low"
+  - "unknown"
+
+Extract and organize the optimization recommendations from the following performance report
+into a JSON object with exactly these keys: \"high\", \"medium\", \"low\", and \"unknown\".
+Each key’s value should be a list of suggestion strings.
+
+Classification Rules:
+1. **Audit Reference:** Cite the audit ID **and** full JSON path (e.g. `lighthouseResult.audits['unused-javascript'].details.items[0].url`).
+2. **Measurable Target:** Include the numeric goal (e.g., "Reduce LCP to ≤1200 ms").
+3. **Resource Context:** Embed the resource URL or file name when relevant.
+4. **Expected Savings:** Append expected savings in seconds (from `metric_savings_ms`).
+5. **Effort Estimate:** Add an effort estimate (e.g., "Effort: Medium (≈2 hrs)").
+6. **Code Snippet:** Provide a ready‑to‑copy snippet if applicable (e.g., `<img loading="lazy" src=...>`).
+7. **Category Tag:** Prefix with optimization domain `[Image]`, `[CSS]`, `[JS]`, `[Server]`.
+8. **Impact Score:** Append a simple impact rating (e.g., "Impact: ⭐⭐⭐☆☆" or "% of total savings").
+9. **Platform Tip:** If known, include stack‑specific advice (e.g., Next.js `next/image`).
+10. **Priority Classification:**
+   - High: Savings ≥ 1.5 seconds or score < 0.25
+   - Medium: Savings between 0.5 and 1.49 seconds or score 0.25 to 0.50
+   - Low: Savings < 0.5 seconds or score between 0.51 and 1.0
+   - Unknown: No savings or score data available
+
+Important:
+- Respond with *only* a valid JSON object.
+- Do NOT include any commentary or explanation outside the JSON.
+
+Performance Report:
+{report}
+"""
+
+
 
             response = model.generate_content(prompt)
             raw = (response.text or "").strip()

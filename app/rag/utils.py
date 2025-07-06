@@ -9,8 +9,9 @@ from langchain.chains import ConversationalRetrievalChain
 
 from app.config import settings
 from .db import vectorstore_meta_coll, chat_collection_name
-from .embeddings import embeddings, text_splitter, user_prompt, get_llm
+from .embeddings import embeddings, text_splitter, get_llm
 from .logging_config import logger
+from app.rag.prompt_library import page_speed_prompt, default_user_prompt,seo_prompt
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 1. Helper: Path to Store (or Load) a User's FAISS Vectorstore on Disk
@@ -96,7 +97,7 @@ def initialize_chat_history(chat_id: str) -> MongoDBChatMessageHistory:
 # ──────────────────────────────────────────────────────────────────────────────
 # 6. Build a ConversationalRetrievalChain (RAG Chain) for user_id + chat_id
 # ──────────────────────────────────────────────────────────────────────────────
-def build_rag_chain(user_id: str, chat_id: str) -> ConversationalRetrievalChain:
+def build_rag_chain(user_id: str, chat_id: str, prompt_type: str) -> ConversationalRetrievalChain:
     """
     - Loads the FAISS index for user_id.
     - Creates a retriever (k=3).
@@ -123,6 +124,16 @@ def build_rag_chain(user_id: str, chat_id: str) -> ConversationalRetrievalChain:
     # 4. Get the LLM
     llm = get_llm()
 
+    if prompt_type == "page_speed":
+        # Use the specific prompt for Page Speed Insights
+        user_prompt = page_speed_prompt
+    elif prompt_type == "seo":
+        # Use the specific prompt for SEO
+        user_prompt = seo_prompt
+    else:
+        # Default to the user prompt if no specific type is provided
+        user_prompt = default_user_prompt
+
     # 5. Build the ConversationalRetrievalChain with the wrapped memory
     chain = ConversationalRetrievalChain.from_llm(
         llm=llm,
@@ -130,7 +141,7 @@ def build_rag_chain(user_id: str, chat_id: str) -> ConversationalRetrievalChain:
         memory=memory,                             # ← pass the ConversationBufferMemory here
         return_source_documents=False,
         chain_type="stuff",
-        combine_docs_chain_kwargs={"prompt": user_prompt},
+        combine_docs_chain_kwargs={"prompt": user_prompt},  # Use the user prompt for combining docs
         verbose=False,
     )
     return chain

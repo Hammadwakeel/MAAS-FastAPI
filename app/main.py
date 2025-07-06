@@ -22,6 +22,8 @@ from app.models import (
 )
 from app.services import PageSpeedService
 from app.rag.routes import router as rag_router
+from app.seo import routes as seo_routes
+
 
 # ------------------------
 # Configure root logger
@@ -62,6 +64,9 @@ app = FastAPI(
 
 # Mount RAG router
 app.include_router(rag_router)
+
+app.include_router(seo_routes.router)
+
 
 # Add CORS middleware
 app.add_middleware(
