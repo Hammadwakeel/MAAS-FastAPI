@@ -126,7 +126,7 @@ class PageSpeedService:
         """
         logger.debug("Building Gemini analysis prompt from PageSpeed data.")
         return f"""
-    You are an **Expert Web Performance Optimization Consultant**. The following JSON `{{PSI_DATA}}` contains exactly these keys (all required):
+    You are an **Expert Web Performance Optimization Consultant**. The following JSON `{pagespeed_data}` contains exactly these keys (all required):
 
     ```
     {{
