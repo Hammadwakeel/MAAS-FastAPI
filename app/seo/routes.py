@@ -1,38 +1,27 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import Any, Dict
 from .seo_service import SEOService
-
+from .models import SEORequest
 
 router = APIRouter(prefix="/seo", tags=["SEO"])
 
 seo_service = SEOService()
 
-
-class SEORequest(BaseModel):
-    seo_data: Dict[str, Any]
-
-class SEOPriorityRequest(BaseModel):
-    report: str
-
-@router.post("/generate-report")
-def generate_seo_report(request: SEORequest):
+@router.post("/generate-full-report")
+def generate_full_seo_analysis(request: SEORequest):
     """
-    Generate SEO report via Gemini.
+    Generate full SEO analysis: report + prioritized suggestions.
     """
     try:
+        # Step 1: Generate SEO report (as a string)
         report = seo_service.generate_seo_report(request.seo_data)
-        return {"success": True, "report": report}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
-@router.post("/generate-priority")
-def generate_seo_priority(request: SEOPriorityRequest):
-    """
-    Generate prioritized SEO suggestions from the report.
-    """
-    try:
-        priority_suggestions = seo_service.generate_seo_priority(request.report)
-        return {"success": True, "priority_suggestions": priority_suggestions}
+
+        # Step 2: Generate prioritized SEO suggestions from the report
+        priority_suggestions = seo_service.generate_seo_priority(report)
+
+        return {
+            "success": True,
+            "report": report,
+            "priority_suggestions": priority_suggestions
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

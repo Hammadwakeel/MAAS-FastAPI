@@ -6,14 +6,10 @@ import requests
 import logging
 import google.generativeai as genai
 from typing import Dict, Any
-from app.config import settings
+from app.page_speed.config import settings
 
 # Create a module-level logger
 glogger = logging.getLogger(__name__)
-
-
-
-
 
 class SEOService:
     """
@@ -67,127 +63,105 @@ class SEOService:
         Build the advanced prompt for SEO analysis based on the updated specialized template.
         """
         return f"""
-You are an **Expert SEO Consultant** with deep expertise in on‑page, technical, and off‑page SEO.
+You are an **Expert SEO Consultant** with advanced knowledge of on-page, technical, and off-page SEO.
 
-The following JSON `{{SEO_DATA}}` contains exactly these keys (all required):
+Your task is to analyze this data and return a detailed SEO audit report as a **multi-line string** (not as JSON). Keep it structured, clear, and easy to read — for example, using sections, bullet points, and indentation.
 
-{json.dumps(seo_data, indent=2)}
+Include these sections in your output:
 
-Your task is to output **exactly** the following JSON report—no additional text, no extra keys, no commentary:
+---
 
-```json
-{{
-  "overall_score": integer,
-  "grade": "A"|"B"|"C"|"D"|"F",
-  "top_strengths": [string],
-  "top_issues": [string],
-  "metrics": [
-    {{
-      "name": string,
-      "value": string|number|boolean|array,
-      "benchmark": string,
-      "score": integer,
-      "status": "good"|"needs_improvement"|"critical",
-      "why_it_matters": string,
-      "recommendation": string
-    }}
-  ],
-  "action_plan": [
-    {{
-      "metric": string,
-      "fix": string,
-      "effort_level": "low"|"medium"|"high"
-    }}
-  ],
-  "monitoring": {{
-    "frequency": string,
-    "methods": [string]
-  }},
-  "technical_seo": "data_unavailable" | {{
-    "core_web_vitals": {{
-      "LCP": string,
-      "FID": string,
-      "CLS": string
-    }},
-    "page_speed_score": integer,
-    "lazy_loading": boolean,
-    "security_headers": [string]
-  }},
-  "schema_markup": "data_unavailable" | {{
-    "structured_data_types": [string],
-    "valid": boolean
-  }},
-  "backlink_profile": "data_unavailable" | {{
-    "referring_domains": integer,
-    "toxic_links": integer,
-    "recommendations": string
-  }},
-  "trend_comparison": "data_unavailable" | {{
-    "previous_score": integer,
-    "change": "increase"|"decrease"|"no_change",
-    "comment": string
-  }}
-}}
+**Overall Summary**
+- Overall SEO Score: (0–100)
+- Grade: A, B, C, D, or F
+- Top Strengths: List the top 3–5 strong areas
+- Top Issues: List the top 3–5 weak/problematic areas
 
-Instructions:
+---
 
-Do not include any text before or after the JSON.
+**Metric Breakdown**
+For each key metric in the data:
+- Metric Name
+- Value: ...
+- Benchmark: ...
+- Score: ...
+- Status: good / needs improvement / critical
+- Why It Matters: Explain simply
+- Recommendation: What to fix or improve
 
-Evaluate SEO performance holistically across all provided data:
+---
 
-On‑Page SEO (titles, meta, headings, content, images, links)
+**Action Plan**
+List 5 weakest metrics and how to fix them:
+- Metric: ...
+  - Fix: ...
+  - Effort Level: low / medium / high
 
-Technical SEO (robots.txt, sitemap.xml, indexability, mobile‑friendly, HTTPS, URL structure)
+---
 
-Off‑Page SEO (backlink_profile)
+**Monitoring Strategy**
+- Frequency: weekly or monthly (based on severity of issues)
+- Methods: Tools or techniques to track progress
 
-Use deterministic scoring based on internal benchmarks:
+---
 
-SEO Score: ≤50=critical, 51–70=needs_improvement, >70=good
+**Technical SEO**
+If data is available, include:
+- Core Web Vitals (LCP, FID, CLS)
+- Page Speed Score
+- Lazy Loading Enabled
+- Security Headers Present
 
-Meta Title length: 50–60 chars=good, <50 or >60=needs_improvement
+If not available, just write “Technical SEO data not available.”
 
-H1 Tags: exactly 1=good, >1=needs_improvement, 0=critical
+---
 
-Heading Structure errors: any=critical
+**Schema Markup**
+If available:
+- Types Detected
+- Is Valid: Yes/No  
+Else: “Schema markup data not available.”
 
-Image Alt Tags ratio: ≥90% good, 50–89% needs_improvement, <50% critical
+---
 
-sitemapXmlCheck: missing=critical
+**Backlink Profile**
+If available:
+- Referring Domains
+- Toxic Links
+- Recommendations to improve off-page SEO
 
-robotsTxtCheck: missing=critical
+---
 
-indexabilityCheck: false=critical
+**Trend Comparison**
+If available:
+- Previous Score
+- Score Change (increase, decrease, or no change)
+- Comment
 
-internalLinksCount: <5=needs_improvement
+---
 
-externalLinksCount: <2=needs_improvement
+### ⚙️ Scoring Rules Summary (for reference):
 
-Advanced sections (technical_seo, schema_markup, backlink_profile, trend_comparison):
+- SEO Score: ≤50 = critical, 51–70 = needs improvement, >70 = good
+- Meta Title: 50–60 chars = good, else needs improvement
+- H1 Tags: exactly 1 = good, 0 or >1 = needs improvement/critical
+- Heading Errors: any = critical
+- Image Alt Tags: ≥90% = good, 50–89% = needs improvement, <50% = critical
+- sitemapXmlCheck / robotsTxtCheck: missing = critical
+- indexabilityCheck: false = critical
+- internalLinksCount: <5 = needs improvement
+- externalLinksCount: <2 = needs improvement
 
-If the input data lacks these metrics, set the field value to "data_unavailable".
+Use these rules to calculate metric status and overall grade:
+- 90–100 → A
+- 80–89 → B
+- 70–79 → C
+- 60–69 → D
+- <60 → F
 
-Otherwise, populate with real values (e.g., core web vitals, page speed score, backlink counts).
+SEO data provided in JSON format:
+{seo_data}
 
-The action_plan must list the 5 weakest metrics by score, across all sections.
-
-Set "monitoring.frequency" to:
-
-"weekly" if any metric status is "critical" or "needs_improvement".
-
-"monthly" if all metrics are "good".
-
-Grading scale:
-
-90–100: A
-
-80–89: B
-
-70–79: C
-
-60–69: D
-
-<60: F    
 """
 
     def generate_seo_priority(self, report: str) -> Dict[str, Any]:
@@ -233,19 +207,19 @@ Classification Rules:
 2. **Benchmark Comparison:** Include both the **current value** and the **ideal benchmark**  
    (e.g. `"Current: 15 keywords, Ideal: 1–3% density"`).
 3. **Impact Estimate:** Quantify expected SEO impact (e.g. `"+12% CTR"` or `"+0.5 page rank score"`).
-4. **Effort Estimate:** Add an effort estimate (e.g. `"Effort: Low (≈1 hr)"`).
-5. **Code Snippet:** Provide a ready‑to‑copy example if applicable  
+4. **Code Snippet:** Provide a ready‑to‑copy example if applicable  
    (e.g. `<meta name="description" content="...">`).
-6. **Category Tag:** Prefix with SEO domain—  
+5. **Category Tag:** Prefix with SEO domain—  
    `[On-Page]`, `[Technical]`, `[Off-Page]`, `[Local]`, `[Schema]`.
-7. **Impact Score:** Append a simple impact rating (e.g. `"Impact: ⭐⭐⭐☆☆"`).
-8. **Platform Tip:** If applicable, include CMS or framework advice  
+6. **Platform Tip:** If applicable, include CMS or framework advice  
    (e.g. `"WordPress: use Yoast SEO"`, `"Next.js: use next/head"`).
-9. **Priority Classification:**  
+7. **Priority Classification:**  
 - **High:** Any metric with score `"critical"` or < 60, or impact ≥ 10%.  
 - **Medium:** Score 60–79 or impact 5–9%.  
 - **Low:** Score 80–100 or impact < 5%.  
 - **Unknown:** No score or impact data available.
+8. Explain in easy english, avoiding technical jargon and explaination for technical terms.
+
 
 Important:
 - Respond with *only* a valid JSON object.

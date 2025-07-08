@@ -7,7 +7,7 @@ from langchain_mongodb.chat_message_histories import MongoDBChatMessageHistory
 from langchain.memory import ConversationBufferMemory                # ← IMPORT THIS
 from langchain.chains import ConversationalRetrievalChain
 
-from app.config import settings
+from app.page_speed.config import settings
 from .db import vectorstore_meta_coll, chat_collection_name
 from .embeddings import embeddings, text_splitter, get_llm
 from .logging_config import logger
@@ -23,7 +23,7 @@ def get_vectorstore_path(user_id: str) -> str:
     """
     base_dir = settings.vectorstore_base_path
     user_dir = os.path.join(base_dir, user_id)
-    os.makedirs(user_dir, exist_ok=True)
+    # os.makedirs(user_dir, exist_ok=True)
     return user_dir
 
 # ──────────────────────────────────────────────────────────────────────────────

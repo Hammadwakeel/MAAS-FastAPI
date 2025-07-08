@@ -1,7 +1,6 @@
 import os
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 
 load_dotenv()  # now os.getenv(...) will pick up values from your .env file

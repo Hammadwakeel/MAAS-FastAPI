@@ -1,10 +1,12 @@
+import os
 import time
 from typing import List, Dict, Any
 from pymongo import ReturnDocument
 
-from app.config import settings
+from app.page_speed.config import settings
 from .db import mongo_client, chat_collection_name
 from .embeddings import get_llm
+from .utils import get_vectorstore_path  # make sure this util is available
 from langchain.prompts import ChatPromptTemplate
 from .logging_config import logger
 
@@ -78,3 +80,22 @@ class ChatHistoryManager:
         )
         logger.info("Summarized chat %s down to one message", chat_id)
         return True
+
+    @staticmethod
+    def vectorstore_exists(user_id: str) -> bool:
+        """
+        Check if a vectorstore directory already exists for this user.
+        """
+        path = get_vectorstore_path(user_id)
+        exists = os.path.isdir(path)
+        logger.debug("Vectorstore path %s exists: %s", path, exists)
+        return exists
+
+    @staticmethod
+    def chat_exists(chat_id: str) -> bool:
+        """
+        Check if a chat session already exists in Mongo for this chat_id.
+        """
+        found = coll.count_documents({"session_id": chat_id}, limit=1) > 0
+        logger.debug("Chat session %s exists: %s", chat_id, found)
+        return found

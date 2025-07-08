@@ -1,7 +1,5 @@
 from langchain.prompts import ChatPromptTemplate
 
-
-
 # ──────────────────────────────────────────────────────────────────────────────
 # 1. Prompt Template for PAGE Speed Insights RAG Chatbot
 # ──────────────────────────────────────────────────────────────────────────────

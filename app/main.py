@@ -5,24 +5,16 @@ import time
 import logging
 import json
 from datetime import datetime
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 
-from app.config import settings
-from app.models import (
-    PageSpeedRequest,
-    PageSpeedDataResponse,
-    ReportRequest,
-    ReportResponse,
-    HealthResponse,
-    PriorityRequest,
-    PriorityResponse
-)
-from app.services import PageSpeedService
+from app.page_speed.config import settings
+from app.page_speed.models import HealthResponse
 from app.rag.routes import router as rag_router
 from app.seo import routes as seo_routes
+from app.page_speed import routes as page_speed_routes
 
 
 # ------------------------
@@ -67,6 +59,8 @@ app.include_router(rag_router)
 
 app.include_router(seo_routes.router)
 
+# Mount PageSpeed router
+app.include_router(page_speed_routes.router)
 
 # Add CORS middleware
 app.add_middleware(
@@ -76,12 +70,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Dependency to get PageSpeed service
-def get_pagespeed_service() -> PageSpeedService:
-    """Dependency to get a new PageSpeedService instance."""
-    return PageSpeedService()
-
 
 @app.get("/", response_model=dict)
 async def root():
@@ -113,124 +101,6 @@ async def health_check():
     )
 
 
-@app.post("/pagespeed", response_model=PageSpeedDataResponse)
-async def fetch_pagespeed(
-    request: PageSpeedRequest,
-    service: PageSpeedService = Depends(get_pagespeed_service)
-):
-    """
-    Fetch raw PageSpeed Insights data for a given URL.
-
-    Request body:
-    {
-      "url": "https://www.example.com"
-    }
-
-    Returns:
-    {
-      "success": true,
-      "url": "https://www.example.com",
-      "pagespeed_data": { ... },
-      "error": null
-    }
-    """
-    url_str = str(request.url)
-    logger.info("Received POST /pagespeed for URL: %s", url_str)
-    
-    try:
-        pagespeed_data = service.get_pagespeed_data(url_str)
-        logger.info("Returning PageSpeed data for %s", url_str)
-        return PageSpeedDataResponse(
-            success=True,
-            url=url_str,
-            pagespeed_data=pagespeed_data,
-            error=None
-        )
-    except Exception as e:
-        logger.error("Error in /pagespeed endpoint for URL %s: %s", url_str, e, exc_info=True)
-        return PageSpeedDataResponse(
-            success=False,
-            url=url_str,
-            pagespeed_data=None,
-            error=str(e)
-        )
-
-
-@app.post("/generate-report", response_model=ReportResponse)
-async def generate_report(
-    body: ReportRequest,
-    service: PageSpeedService = Depends(get_pagespeed_service)
-):
-    """
-    Generate a Gemini-based optimization report from previously-fetched PageSpeed JSON.
-
-    Request body:
-    {
-      "pagespeed_data": { …full PageSpeed JSON… }
-    }
-
-    Returns:
-    {
-      "success": true,
-      "report": "Gemini-generated analysis…",
-      "error": null
-    }
-    """
-    logger.info("Received POST /generate-report")
-
-    try:
-        pagespeed_data = body.pagespeed_data
-        logger.debug("PageSpeed JSON payload size: %d bytes", len(str(pagespeed_data)))
-        
-        report_text = service.generate_report_with_gemini(pagespeed_data)
-        logger.info("Returning Gemini report.")
-        return ReportResponse(
-            success=True,
-            report=report_text,
-            error=None
-        )
-    except Exception as e:
-        logger.error("Error in /generate-report endpoint: %s", e, exc_info=True)
-        return ReportResponse(
-            success=False,
-            report=None,
-            error=str(e)
-        )
-
-
-@app.post("/generate-priorities", response_model=PriorityResponse)
-async def generate_priorities(
-    request: PriorityRequest,
-    service: PageSpeedService = Depends(get_pagespeed_service)
-):
-    """
-    Generate a prioritized list of performance improvements from a Gemini report.
-
-    Request body:
-    {
-      "report": "Full Gemini-generated performance report..."
-    }
-
-    Returns:
-    {
-      "success": true,
-      "priorities": {
-        "High": ["Optimize TBT by reducing JS execution", ...],
-        "Medium": [...],
-        "Low": [...]
-      },
-      "error": null
-    }
-    """
-    logger.info("Received POST /generate-priorities")
-    try:
-        priorities = service.generate_priority(request.report)
-        return PriorityResponse(success=True, priorities=priorities)
-    except Exception as e:
-        logger.error("Error in /generate-priorities: %s", e, exc_info=True)
-        return PriorityResponse(success=False, priorities=None, error=str(e))
-
-
 @app.exception_handler(404)
 async def not_found_handler(request, exc):
     """Custom 404 handler."""
@@ -243,7 +113,6 @@ async def not_found_handler(request, exc):
             "docs": "/docs"
         }
     )
-
 
 @app.exception_handler(500)
 async def internal_error_handler(request, exc):

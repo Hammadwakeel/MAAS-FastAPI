@@ -110,3 +110,13 @@ class PriorityResponse(BaseModel):
     success: bool
     priorities: Optional[Dict[str, List[str]]] = None
     error: Optional[str] = None
+
+class AnalyzeRequest(BaseModel):
+    url: HttpUrl
+
+class AnalyzeResponse(BaseModel):
+    success: bool
+    url: HttpUrl
+    report: str | None
+    priorities: dict | None
+    error: str | None

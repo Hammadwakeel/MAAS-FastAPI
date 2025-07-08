@@ -6,7 +6,7 @@ import requests
 import logging
 import google.generativeai as genai
 from typing import Dict, Any
-from app.config import settings
+from app.page_speed.config import settings
 
 # Create a module-level logger
 logger = logging.getLogger(__name__)
@@ -116,106 +116,78 @@ class PageSpeedService:
     
     def _create_analysis_prompt(self, pagespeed_data: Dict[Any, Any]) -> str:
         """
-        Create the specialized prompt for Gemini analysis.
+        Create the specialized prompt for Gemini analysis in a human-readable format.
 
         Args:
             pagespeed_data (Dict[Any, Any]): PageSpeed Insights data
 
         Returns:
-            str: Formatted prompt for Gemini
+            str: Human-readable, user-friendly report prompt
         """
         logger.debug("Building Gemini analysis prompt from PageSpeed data.")
         return f"""
+<<<<<<< HEAD:app/services.py
     You are an **Expert Web Performance Optimization Consultant**. The following JSON `{pagespeed_data}` contains exactly these keys (all required):
+=======
+    You are an **Expert Web Performance Optimization Consultant**. The following JSON `{{pagespeed_data}}` includes detailed website performance metrics from Google PageSpeed Insights.
+>>>>>>> 574c6ac (Update endpoints):app/page_speed/services.py
 
-    ```
-    {{
-    "url": string,  // analyzed page URL
-    "origin": string,  // origin domain
-    "loading_experience": {{  // Chrome UX data for URL
-        "overall_category": "FAST"|"AVERAGE"|"SLOW",
-        "metrics": {{
-        "CLS": {{ "percentile": number, "category": string }},
-        "TTFB": {{ "percentile": number, "category": string }},
-        "FCP": {{ "percentile": number, "category": string }},
-        "INP": {{ "percentile": number, "category": string }}
-        }}
-    }},
-    "origin_loading_experience": {{  // Chrome UX data for origin
-        "overall_category": "FAST"|"AVERAGE"|"SLOW"
-    }},
-    "lighthouse_audits": [  // only audits with score <1 or notApplicable
-        {{
-        "id": string,  // audit identifier
-        "numeric_value": number,  // ms or unit value
-        "score": number|null,  // 0–1 or null if N/A
-        "description": string,  // audit title/description
-        "details": {{  // optional details for resource URLs
-            "items": [ {{ "url": string }} ]
-        }},
-        "metric_savings_ms"?: number  // if available
-        }}
-    ]
-    }}
-    ```
+    Your task is to analyze this data and generate a human-friendly performance **report in plain English**. The report will be read by a **non-technical business owner**, so keep it understandable while explaining technical concepts briefly when necessary.
 
-    Your job: output **exactly** the following JSON report—no extra keys, no prose outside these structures:
+    ### Format of Your Response:
+    Respond with a **natural language summary (not JSON)**. It should read like a report, not like code or technical output.
 
-    ```json
-    {{
-    "overall_score": integer,
-    "grade": "A"|"B"|"C"|"D"|"F",
-    "summary": {{
-        "CLS": {{ "value": number, "category": string }},
-        "TTFB": {{ "value": number, "category": string }},
-        "FCP": {{ "value": number, "category": string }},
-        "INP": {{ "value": number, "category": string }},
-        "LCP": {{ "value": number, "score": number }},
-        "TBT": {{ "value": number, "score": number }}
-    }},
-    "top_issues": [string],
-    "top_opportunities": [string],
-    "audits": [
-        {{
-        "id": string,
-        "value": number,
-        "score": number|null,
-        "resource_url"?: string,  // first offending URL from details.items
-        "status": "critical"|"needs_improvement"|"good",
-        "recommendation": string,
-        "expected_gain_s": number
-        }}
-    ],
-    "action_plan": [
-        {{
-        "id": string,
-        "fix": string,
-        "platform_tip"?: string,  // e.g. Next.js `next/image` or WordPress-specific advice
-        "effort": "low"|"medium"|"high"
-        }}
-    ],
-    "monitoring": {{
-        "frequency": string,
-        "methods": [string],
-        "ci_snippet"?: string  // optional GitHub Action or Lighthouse CI config
-    }}
-    }}``` 
-    **Requirements:**
-    - **Strict Mapping:** Every field derives from `{{PSI_DATA}}` (use JSON paths like `lighthouseResult.audits[...].numeric_value`).
-    - **No Extra Text:** Only the JSON above.
-    - **Tie to JSON Paths:** Include resource URLs via `details.items[0].url`.
-    - **Exact Code Snippets:** Provide `<link rel="preload"...>` or `<script defer>` snippets.
-    - **Quantify Impact:** Use `metric_savings_ms` for each audit to calculate `expected_gain_s`.
-    - **Threshold Targets:** State target values, e.g. "Reduce LCP to ≤1200 ms".
-    - **Platform‑Specific Tips:** If known, include stack advice, e.g. Next.js `next/image` or WordPress plugins.
-    - **Monitoring CI:** Optionally include a GitHub Action snippet:
-    ```yaml
-    - uses: treosh/lighthouse-ci-action@v5
-        with:
-        configPath: .lighthouserc.json
-    ```
-    - **Deterministic Scoring & Priority:** Same as before.
-    """
+    ---
+
+    ### Your report must include the following sections:
+
+    1. **Overall Performance Summary**
+    - Explain how fast the website feels to users.
+    - Mention the overall category (FAST, AVERAGE, SLOW) and what that means.
+    - If origin data differs from page data, point it out.
+
+    2. **Key Metrics Breakdown**
+    - For each metric (`CLS`, `TTFB`, `FCP`, `INP`, `LCP`, `TBT`):
+        - Provide the value and performance category (e.g., "good", "needs improvement").
+        - Briefly explain what the metric means and how it impacts the user experience.
+        - Use simple analogies if possible. (Example: “CLS measures layout shift – like if buttons jump around while loading.”)
+
+    3. **Top Issues**
+    - List and explain the top 3–5 performance problems in plain language.
+    - Avoid jargon. Example: “Too many large images are slowing down the page.”
+
+    4. **Improvement Opportunities**
+    - Suggest high-impact actions to improve speed (e.g., compress images, lazy load below-the-fold content).
+    - Prioritize based on effort (low/medium/high) and expected time savings.
+    - Mention technical fixes where helpful, but **always** explain what they do and **why they help**.
+
+    5. **Detailed Audit Notes**
+    - Mention any specific URLs or files causing problems (e.g., slow scripts, unoptimized images).
+    - For each, explain the issue and estimated time it adds to loading.
+    - Be clear and concise.
+
+    6. **Recommended Action Plan**
+    - Provide a to-do list of concrete fixes with estimated effort levels.
+    - If possible, include tips tailored to platforms (e.g., for WordPress or Next.js).
+
+    7. **Ongoing Monitoring Advice**
+    - Recommend how often they should check performance.
+    ---
+
+    ### Important:
+    - Do **not** output JSON or code blocks unless specifically required.
+    - Use a tone that's **professional, helpful, and non-technical**.
+    - Help the reader understand what needs fixing and why it matters for their website and users.
+
+    Example phrasing:
+    > "Your site currently loads in about 3.2 seconds for most users, which is considered average. Improving this can reduce bounce rates and improve conversions."
+
+    Be specific and practical. Use values directly from `{{pagespeed_data}}` such as `numeric_value`, `percentile`, and `category` fields.
+
+    ### PageSpeed Data:
+    {json.dumps(pagespeed_data, indent=2)}
+        """
+
 
     
     def analyze_url(self, url: str) -> Dict[str, Any]:
@@ -295,16 +267,15 @@ Classification Rules:
 2. **Measurable Target:** Include the numeric goal (e.g., "Reduce LCP to ≤1200 ms").
 3. **Resource Context:** Embed the resource URL or file name when relevant.
 4. **Expected Savings:** Append expected savings in seconds (from `metric_savings_ms`).
-5. **Effort Estimate:** Add an effort estimate (e.g., "Effort: Medium (≈2 hrs)").
-6. **Code Snippet:** Provide a ready‑to‑copy snippet if applicable (e.g., `<img loading="lazy" src=...>`).
-7. **Category Tag:** Prefix with optimization domain `[Image]`, `[CSS]`, `[JS]`, `[Server]`.
-8. **Impact Score:** Append a simple impact rating (e.g., "Impact: ⭐⭐⭐☆☆" or "% of total savings").
-9. **Platform Tip:** If known, include stack‑specific advice (e.g., Next.js `next/image`).
-10. **Priority Classification:**
+5. **Code Snippet:** Provide a ready‑to‑copy snippet if applicable (e.g., `<img loading="lazy" src=...>`).
+6. **Category Tag:** Prefix with optimization domain `[Image]`, `[CSS]`, `[JS]`, `[Server]`.
+7. **Platform Tip:** If known, include stack‑specific advice (e.g., Next.js `next/image`).
+8. **Priority Classification:**
    - High: Savings ≥ 1.5 seconds or score < 0.25
    - Medium: Savings between 0.5 and 1.49 seconds or score 0.25 to 0.50
    - Low: Savings < 0.5 seconds or score between 0.51 and 1.0
    - Unknown: No savings or score data available
+9. Explain in easy english, avoiding technical jargon and explaination for technical terms.
 
 Important:
 - Respond with *only* a valid JSON object.

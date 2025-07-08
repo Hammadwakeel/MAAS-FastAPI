@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-from app.config import settings
+from app.page_speed.config import settings
 
 # ──────────────────────────────────────────────────────────────────────────────
 # MongoDB Initialization
