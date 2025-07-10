@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException
 
 from .schemas import SetupRequest, ChatRequest, SetupResponse, ChatResponse
 from .utils import (
+    get_vectorstore_metadata,
     text_splitter,
     embeddings,
     save_vectorstore_to_disk,
@@ -31,6 +32,23 @@ async def setup_rag_session(onboarding_id: str, body: SetupRequest):
             onboarding_id, vectorstore_path
         )
         vs_path = vectorstore_path
+
+        chat_session = get_vectorstore_metadata(onboarding_id)
+
+        if chat_session:
+            chat_id = str(chat_session["chat_id"])
+            logger.info("Using existing chat session id=%s for onboarding_id=%s", chat_id, onboarding_id)
+        else:
+            logger.warning("No chat session found for onboarding_id=%s", onboarding_id)
+        
+        return SetupResponse(
+            success=True,
+            message="RAG setup completed with existing vectorstore.",
+            onboarding_id=onboarding_id,
+            chat_id=chat_id,
+            vectorstore_path=vs_path
+        )
+
     else:
         if not body.documents:
             logger.error(
@@ -40,6 +58,15 @@ async def setup_rag_session(onboarding_id: str, body: SetupRequest):
                 status_code=400,
                 detail="Vectorstore does not exist; please provide documents to ingest."
             )
+        
+        # Create new chat session
+        chat_id = str(uuid.uuid4())
+        ChatHistoryManager.create_session(chat_id)
+        logger.info(
+            "Created new chat session %s for onboarding_id=%s",
+            chat_id, onboarding_id
+        )
+
         # Ingest new vectorstore
         all_text = "\n\n".join(body.documents)
         text_chunks = text_splitter.split_text(all_text)
@@ -48,18 +75,11 @@ async def setup_rag_session(onboarding_id: str, body: SetupRequest):
         vs = _FAISS.from_texts(texts=text_chunks, embedding=embeddings)
         vs_path = save_vectorstore_to_disk(vs, onboarding_id)
         logger.info("Saved FAISS index to %s", vs_path)
-        upsert_vectorstore_metadata(onboarding_id, vs_path)
+        upsert_vectorstore_metadata(onboarding_id, vs_path, chat_id)
         logger.info(
             "Upserted vectorstore metadata for onboarding_id=%s", onboarding_id
         )
-
-    # Create new chat session
-    chat_id = str(uuid.uuid4())
-    ChatHistoryManager.create_session(chat_id)
-    logger.info(
-        "Created new chat session %s for onboarding_id=%s",
-        chat_id, onboarding_id
-    )
+        
 
     return SetupResponse(
         success=True,
