@@ -126,11 +126,7 @@ class PageSpeedService:
         """
         logger.debug("Building Gemini analysis prompt from PageSpeed data.")
         return f"""
-<<<<<<< HEAD:app/services.py
-    You are an **Expert Web Performance Optimization Consultant**. The following JSON `{pagespeed_data}` contains exactly these keys (all required):
-=======
-    You are an **Expert Web Performance Optimization Consultant**. The following JSON `{{pagespeed_data}}` includes detailed website performance metrics from Google PageSpeed Insights.
->>>>>>> 574c6ac (Update endpoints):app/page_speed/services.py
+    You are an **Expert Web Performance Optimization Consultant**. The following JSON page speed data includes detailed website performance metrics from Google PageSpeed Insights.
 
     Your task is to analyze this data and generate a human-friendly performance **report in plain English**. The report will be read by a **non-technical business owner**, so keep it understandable while explaining technical concepts briefly when necessary.
 
