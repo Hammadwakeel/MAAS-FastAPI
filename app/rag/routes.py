@@ -20,7 +20,7 @@ router = APIRouter(prefix="/rag", tags=["rag"])
 @router.post("/initialization/{onboarding_id}/{doc_type}", response_model=SetupResponse)
 async def setup_rag_session(
     onboarding_id: str = Path(..., description="Unique onboarding identifier"),
-    doc_type: str = Path(..., description="Type of document (e.g., page_speed, seo, uiux)"),
+    doc_type: str = Path(..., description="Type of document (e.g., page_speed, seo, content_relevance or uiux)"),
     body: SetupRequest = ...
 ):
     """
@@ -86,7 +86,7 @@ async def chat_with_user(
     onboarding_id: str = Path(...),
     doc_type: str = Path(...),
     chat_id: str = Path(...),
-    prompt_type: str = Query(..., description="Prompt type, e.g., page_speed or seo"),
+    prompt_type: str = Query(..., description="Prompt type, e.g., page_speed, content_relevance or seo"),
     body: ChatRequest = ...
 ):
     """

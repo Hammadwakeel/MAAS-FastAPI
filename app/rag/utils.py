@@ -14,7 +14,8 @@ from .logging_config import logger
 from .prompt_library import (
     default_user_prompt,
     page_speed_prompt,
-    seo_prompt
+    seo_prompt,
+    content_relevance_prompt
 )
 
 # 1. Path with doc_type
@@ -91,6 +92,8 @@ def build_rag_chain(
         user_prompt = page_speed_prompt
     elif prompt_type == "seo":
         user_prompt = seo_prompt
+    elif prompt_type == "content_relevance":
+        user_prompt = content_relevance_prompt
     else:
         user_prompt = default_user_prompt
 

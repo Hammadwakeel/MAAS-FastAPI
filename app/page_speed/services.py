@@ -174,7 +174,8 @@ class PageSpeedService:
     - Do **not** output JSON or code blocks unless specifically required.
     - Use a tone that's **professional, helpful, and non-technical**.
     - Help the reader understand what needs fixing and why it matters for their website and users.
-
+    - Don't add anything outside the report format.
+    
     Example phrasing:
     > "Your site currently loads in about 3.2 seconds for most users, which is considered average. Improving this can reduce bounce rates and improve conversions."
 

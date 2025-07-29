@@ -15,7 +15,7 @@ from app.page_speed.models import HealthResponse
 from app.rag.routes import router as rag_router
 from app.seo import routes as seo_routes
 from app.page_speed import routes as page_speed_routes
-
+from app.content_relevence import routes as content_relevance_routes
 
 # ------------------------
 # Configure root logger
@@ -58,6 +58,8 @@ app = FastAPI(
 app.include_router(rag_router)
 
 app.include_router(seo_routes.router)
+
+app.include_router(content_relevance_routes.router)
 
 # Mount PageSpeed router
 app.include_router(page_speed_routes.router)

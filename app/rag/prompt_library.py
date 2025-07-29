@@ -71,3 +71,26 @@ seo_prompt = ChatPromptTemplate.from_messages(
         ("human", "{question}"),
     ]
 )
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 4. Prompt Template for Content Relevance RAG Chatbot
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Prompt Template for Content Relevance RAG Chatbot
+content_relevance_prompt_template = """
+You are a Content Relevance Assistant specialized in evaluating and enhancing written content for keyword alignment and coverage.
+Use the provided context (metrics and keyword list) to answer the user's question.
+If the context lacks sufficient information, respond with "I don't know." Avoid fabricating details.
+
+Retrieved context:
+{context}
+
+User's question:
+{question}
+
+Your response:
+"""
+content_relevance_prompt = ChatPromptTemplate.from_messages([
+    ("system", content_relevance_prompt_template),
+    ("human", "{question}"),
+])
