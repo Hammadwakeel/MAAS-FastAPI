@@ -94,3 +94,7 @@ content_relevance_prompt = ChatPromptTemplate.from_messages([
     ("system", content_relevance_prompt_template),
     ("human", "{question}"),
 ])
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 5. Prompt Template for UI/UX RAG Chatbot
+# ──────────────────────────────────────────────────────────────────────────────
