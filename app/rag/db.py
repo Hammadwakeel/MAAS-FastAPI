@@ -1,3 +1,4 @@
+# db.py
 from pymongo import MongoClient
 from app.page_speed.config import settings
 
@@ -5,12 +6,14 @@ from app.page_speed.config import settings
 # MongoDB Initialization
 # ──────────────────────────────────────────────────────────────────────────────
 
-# Connect to MongoDB using the URI from app/config.py
+# Connect to MongoDB using the URI from settings
 mongo_client = MongoClient(settings.mongo_uri)
-mongo_db = mongo_client[settings.mongo_chat_db]
+
+# Use the renamed settings attributes
+mongo_db = mongo_client[settings.mongo_db]
 
 # Collection to store metadata that maps user_id → vectorstore_path
 vectorstore_meta_coll = mongo_db["vectorstore_metadata"]
 
 # Name of the collection that MongoDBChatMessageHistory will write to
-chat_collection_name = settings.mongo_chat_collection
+chat_collection_name = settings.mongo_collection

@@ -1,4 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from urllib.parse import quote_plus
+
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
@@ -25,10 +27,19 @@ class Settings(BaseSettings):
     # ───────────────────────────────────────────────────────────────────────────
     # MongoDB Configuration (Local)
     # ───────────────────────────────────────────────────────────────────────────
-    mongo_uri: str = "mongodb://localhost:27017"
-    mongo_chat_db: str = "MAAS"
-    mongo_chat_collection: str = "chat_histories"
+    mongo_user: str
+    mongo_password: str
+    mongo_host: str
+    mongo_db: str = "MAAS"
+    mongo_collection: str = "chat_histories"
 
+    @property
+    def mongo_uri(self) -> str:
+        pw = quote_plus(self.mongo_password)
+        return (
+            f"mongodb+srv://{self.mongo_user}:{pw}@{self.mongo_host}/"
+            f"{self.mongo_db}?retryWrites=true&w=majority"
+        )
     # ───────────────────────────────────────────────────────────────────────────
     # FastAPI Server Configuration
     # ───────────────────────────────────────────────────────────────────────────

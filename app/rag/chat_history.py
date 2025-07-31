@@ -11,7 +11,7 @@ from langchain.prompts import ChatPromptTemplate
 from .logging_config import logger
 
 # Get the actual collection object
-db = mongo_client[settings.mongo_chat_db]
+db = mongo_client[settings.mongo_db]
 coll = db[chat_collection_name]
 
 # LLM & summarization prompt

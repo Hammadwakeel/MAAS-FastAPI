@@ -78,7 +78,7 @@ def build_rag_chain(
     chat_history = MongoDBChatMessageHistory(
         session_id=chat_id,
         connection_string=settings.mongo_uri,
-        database_name=settings.mongo_chat_db,
+        database_name=settings.mongo_db,
         collection_name=chat_collection_name,
     )
     memory = ConversationBufferMemory(

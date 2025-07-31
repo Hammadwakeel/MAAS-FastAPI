@@ -3,7 +3,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from dotenv import load_dotenv
 
-load_dotenv()  # now os.getenv(...) will pick up values from your .env file
+load_dotenv()  
 
 
 def get_llm():
@@ -17,7 +17,7 @@ def get_llm():
         model="meta-llama/llama-4-scout-17b-16e-instruct",
         temperature=0,
         max_tokens=1024,
-        api_key=os.getenv("GROQ_API_KEY", "")  # Put your actual GROQ key in .env as GROQ_API_KEY
+        api_key=os.getenv("GROQ_API_KEY", "")  
     )
     return llm
 
