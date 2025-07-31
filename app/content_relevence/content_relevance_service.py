@@ -1,162 +1,86 @@
-# content_relevance_service.py
+# app/content_relevance/content_relevance_service.py
 """
-Business logic service for Content Relevance analysis.
+Business logic service for Content Relevance analysis and prioritization (mirroring SEOService).
 """
-import json
+import os
+import getpass
 import logging
-import google.generativeai as genai
 from typing import Dict, Any
-from app.page_speed.config import settings
 
-# Create a module-level logger
+from app.page_speed.config import settings
+from app.content_relevence.models import Recommendation, PrioritySuggestions
+from app.content_relevence.prompts import ContentRelevancePrompts
+
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import PydanticOutputParser
+
+# Module-level logger
 glogger = logging.getLogger(__name__)
+
 
 class ContentRelevanceService:
     """
-    Service class for generating Content Relevance reports via Gemini AI.
+    Service class for generating Content Relevance reports and prioritized suggestions via Gemini.
     """
     def __init__(self):
-        self.gemini_api_key = settings.gemini_api_key
-        if self.gemini_api_key:
-            glogger.info("Configuring Gemini AI for Content Relevance reporting.")
-            genai.configure(api_key=self.gemini_api_key)
-        else:
-            glogger.warning("No Gemini API key found. Reporting will fail if called.")
+        # configure Gemini key
+        key = settings.gemini_api_key or os.getenv("GEMINI_API_KEY")
+        if not key:
+            key = getpass.getpass("Enter your Gemini API key: ")
+        self.gemini_api_key = key
+
+        # initialize LangChain LLM wrapper
+        self.llm = ChatGoogleGenerativeAI(
+            model="gemini-2.5-flash",
+            temperature=0,
+            max_tokens=None,
+            timeout=None,
+            max_retries=3,
+            api_key=self.gemini_api_key
+        )
+
+        # Prompt template for raw report
+        self.report_prompt = ChatPromptTemplate.from_messages([
+            ("system", ContentRelevancePrompts.REPORT_PROMPT),
+            ("human", "{data}")
+        ])
+
+        # Prompt + parser for prioritized suggestions
+        self.parser = PydanticOutputParser(pydantic_object=Recommendation)
+        priority_template = ChatPromptTemplate.from_messages([
+            ("system", ContentRelevancePrompts.SYSTEM_PROMPT),
+            ("human", "{report}")
+        ]).partial(format_instructions=self.parser.get_format_instructions())
+        self.priority_chain = priority_template | self.llm | self.parser
 
     def generate_content_relevance_report(self, data: Dict[str, Any]) -> str:
         """
-        Generate a Content Relevance report using Gemini AI.
+        Generate a Markdown Content Relevance report.
         """
-        glogger.info("Starting Content Relevance report generation.")
+        glogger.info("Starting Content Relevance report generation via llm.invoke.")
         if not self.gemini_api_key:
-            glogger.error("Gemini API key not configured")
             raise Exception("Gemini API key not configured")
 
         try:
-            prompt = self._create_relevance_prompt(data)
-            glogger.debug("Relevance prompt: %s", prompt[:200])
-            response = genai.GenerativeModel("gemini-2.0-flash").generate_content(prompt)
-            text = getattr(response, "text", None)
+            report = (self.report_prompt | self.llm).invoke({"data": data})
+            text = getattr(report, 'content', None) or getattr(report, 'text', None)
             if not text:
-                glogger.error("Empty response from Gemini")
-                raise Exception("Empty response from Gemini")
+                raise Exception("Empty response from Gemini via llm.invoke")
             glogger.info("Content Relevance report generated successfully.")
             return text.strip()
         except Exception as e:
-            glogger.error("Error during report generation: %s", e, exc_info=True)
+            glogger.error("Error generating content relevance report: %s", e, exc_info=True)
             raise
 
-    def _create_relevance_prompt(self, data: Dict[str, Any]) -> str:
+    def generate_content_priority(self, report: str) -> PrioritySuggestions:
         """
-        Build the enhanced prompt for Content Relevance analysis, including benchmarks, examples, and impact estimates.
+        Generate prioritized content relevance suggestions from a Markdown report.
         """
-        keywords = data.get('keywords', [])
-        keyword_list = ", ".join(keywords)
-        return f"""
-You are a **Content Strategy Expert**. Analyze the following content metrics and target keywords for relevance, coverage, and practical SEO impact. Provide a detailed report in Markdown, using structured sections do not add tables in the report, with the following enhancements:
-
-1. **Summary of Relevance**:
-   - Brief overview of alignment with keywords: {keyword_list}
-   - Overall Content Relevance Score: {data.get('contentRelevanceScore')} (out of 10)
-
-2. **Metric Breakdown**:
-   For each metric below, include:
-   - **Value** (from data)
-   - **Benchmark** (ideal or industry standard)
-   - **Status**: good / needs improvement / critical
-   - **Why It Matters**: concise rationale
-   - **Specific Example**: show where/how to improve (e.g., exact H1 text with keyword)
-   - **Expected Impact**: estimated uplift (e.g., `+5% relevance`)
-
-   - **Keyword Coverage Score**: {data.get('keywordCoverageScore')}
-   - **Density Score**: {data.get('densityScore')}% (ideal 1–3%)
-   - **Readability**: {data.get('readabilityScoreOutOf10')} / 10 (ideal ≥ 6)
-   - **Word Count**: {data.get('wordCount')} words (benchmark 1500–3000)
-   - **Media Richness**: Images = {data.get('imageCount')}, Videos = {data.get('videoCount')} (ideal ≥ 2 videos)
-
-3. **Top Strengths**:
-   - List top 3 areas where the actual values exceed benchmarks, referencing metric names and values.
-
-4. **Key Issues & Recommendations**:
-   For each of the top 3 issues, provide:
-   - **Issue**: name and value vs. benchmark
-   - **Actionable Fix**: code or content snippet example, e.g.:  
-     ```html
-     <h1>{keywords[0].capitalize()} Services for Your Business</h1>
-     ```
-   - **Effort**: low / medium / high
-   - **Expected Impact**: e.g., `+10% coverage`, `+3 readability`
-
-5. **Priority Action Plan**:
-   - Top 5 actions, with columns: Priority (1–5), Action, Effort, Expected Impact.
-
-6. **Monitoring & Next Steps**:
-   - Weekly or monthly tracking recommendations
-
-7. **Bonus**: Suggest 2 related long-tail keywords to enhance depth.
-
-Make the report engaging, use code blocks, and bullet lists where appropriate. Do not output JSON—provide a human-readable Markdown report. and do not write anything outside the report format."""
-
-
-    def generate_content_priority(self, report: str) -> Dict[str, Any]:
-        """
-        Generate prioritized content relevance recommendations based on the AI-generated report.
-
-        Args:
-            report (str): The Markdown-formatted content relevance report.
-
-        Returns:
-            Dict[str, Any]: Dictionary mapping priority levels to recommendation lists.
-
-        Raises:
-            Exception: If priority generation fails.
-        """
-        glogger.info("Generating prioritized suggestions from the content relevance report.")
-        if not self.gemini_api_key:
-            msg = "Gemini API key not configured"
-            glogger.error(msg)
-            raise Exception(msg)
+        glogger.info("Generating prioritized content relevance suggestions via chain.invoke.")
         try:
-            model = genai.GenerativeModel("gemini-2.0-flash")
-            prompt = f"""
-You are a **Content Strategy Expert**. Extract all actionable recommendations from the following content relevance report and organize them into a JSON object with keys: "high", "medium", "low". 
-
-For each recommendation, include:
-- "recommendation": the action text
-- "impact": the expected impact (e.g. "+5% relevance")
-- "effort": low/medium/high
-
-Important:
-- Respond with *only* a valid JSON object.
-- Do NOT include any commentary or explanation outside the JSON.
- of t
-
-Report:
-{report}
-
-Respond with only a JSON object.
-"""
-            response = model.generate_content(prompt)
-            raw = (response.text or "").strip()
-            glogger.debug("Raw priority response: %s", raw[:200])
-            # Extract JSON
-            start = raw.find('{')
-            end = raw.rfind('}')
-            if start == -1 or end == -1 or end <= start:
-                raise ValueError("No JSON object found in response")
-            json_str = raw[start:end+1]
-            suggestions = json.loads(json_str)
-            if not isinstance(suggestions, dict):
-                raise ValueError("Parsed JSON is not a dictionary")
-            for key in ("high", "medium", "low", "unknown"):
-                suggestions.setdefault(key, [])
-            glogger.info("Priority suggestions generated successfully.")
-            return suggestions
-        except json.JSONDecodeError as je:
-            msg = f"Failed to parse JSON: {je}"
-            glogger.error(msg, exc_info=True)
-            raise Exception(msg)
+            rec: Recommendation = self.priority_chain.invoke({"report": report})
+            return rec.priority_suggestions
         except Exception as e:
-            msg = f"Error generating content priority suggestions: {e}"
-            glogger.error(msg, exc_info=True)
+            glogger.error("Error generating content priority suggestions: %s", e, exc_info=True)
             raise

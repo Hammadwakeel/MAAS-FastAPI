@@ -1,9 +1,9 @@
-fastapi==0.104.1
-uvicorn==0.24.0
-python-dotenv==1.0.0
-requests==2.31.0
-google-generativeai==0.3.2
-pydantic==2.5.0
+fastapi
+uvicorn
+python-dotenv
+requests
+google-generativeai
+pydantic
 pydantic_settings
 langchain_groq 
 langchain_community 
@@ -11,5 +11,6 @@ faiss-cpu
 pymongo 
 langchain-mongodb
 huggingface_hub
-python_dotenv
 sentence_transformers
+langchain_google_genai
+langchain_huggingface

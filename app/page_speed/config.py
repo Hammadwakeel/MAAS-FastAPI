@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     # ───────────────────────────────────────────────────────────────────────────
     pagespeed_api_key: str
     gemini_api_key: str
+    google_api_key1: str
+
 
     # ───────────────────────────────────────────────────────────────────────────
     # Chat & RAG Configuration

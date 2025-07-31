@@ -1,8 +1,9 @@
-# routes.py
+# app/content_relevance/routes.py
 from fastapi import APIRouter, HTTPException, Request
 import logging
-from .content_relevance_service import ContentRelevanceService
-from .models import ContentRelevanceRequest, ContentRelevanceResponse
+
+from app.content_relevence.content_relevance_service import ContentRelevanceService
+from app.content_relevence.models import ContentRelevanceRequest, ContentRelevanceResponse
 
 # Create a module-level logger
 router_logger = logging.getLogger(__name__)
@@ -11,7 +12,10 @@ router = APIRouter(prefix="/content-relevance", tags=["ContentRelevance"])
 service = ContentRelevanceService()
 
 @router.post("/report", response_model=ContentRelevanceResponse)
-async def generate_full_content_relevance(request: Request, payload: ContentRelevanceRequest):
+async def generate_full_content_relevance(
+    request: Request,
+    payload: ContentRelevanceRequest
+) -> ContentRelevanceResponse:
     """
     Generate a full Content Relevance report and corresponding prioritized suggestions.
     """
@@ -25,8 +29,14 @@ async def generate_full_content_relevance(request: Request, payload: ContentRele
         priorities = service.generate_content_priority(report)
         router_logger.info("Priorities extracted successfully")
 
-        return ContentRelevanceResponse(success=True, report=report, priorities=priorities)
+        return ContentRelevanceResponse(
+            success=True,
+            report=report,
+            priorities=priorities
+        )
 
     except Exception as e:
-        router_logger.error("Error during content relevance processing: %s", e, exc_info=True)
+        router_logger.error(
+            "Error during content relevance processing: %s", e, exc_info=True
+        )
         raise HTTPException(status_code=500, detail=str(e))

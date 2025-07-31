@@ -16,6 +16,29 @@ from app.rag.routes import router as rag_router
 from app.seo import routes as seo_routes
 from app.page_speed import routes as page_speed_routes
 from app.content_relevence import routes as content_relevance_routes
+from app.keywords.routes import router as keywords_router
+
+
+# app/suppress_warnings.py
+
+import warnings
+
+# Suppress Pydantic config change warning
+warnings.filterwarnings(
+    "ignore",
+    message="Valid config keys have changed in V2:*",
+    category=UserWarning,
+    module="pydantic._internal._config",
+)
+
+# Suppress other optional warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
+try:
+    from langchain_core._api.deprecation import LangChainDeprecationWarning
+    warnings.filterwarnings("ignore", category=LangChainDeprecationWarning)
+except ImportError:
+    pass
+
 
 # ------------------------
 # Configure root logger
@@ -63,6 +86,9 @@ app.include_router(content_relevance_routes.router)
 
 # Mount PageSpeed router
 app.include_router(page_speed_routes.router)
+
+# Mount the keywords router
+app.include_router(keywords_router)
 
 # Add CORS middleware
 app.add_middleware(

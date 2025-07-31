@@ -1,27 +1,42 @@
-# models.py
-from pydantic import BaseModel
-from typing import Any, Dict, List, Optional
-import logging
+# app/content_relevance/models.py
+"""
+Pydantic models for Content Relevance requests and recommendations (mirroring SEO logic).
+"""
+from pydantic import BaseModel, Field
+from typing import Any, Dict, List
 
-# Optionally create a logger here if you need to log model-related events
-model_logger = logging.getLogger(__name__)
 
 class ContentRelevanceRequest(BaseModel):
-    data: Dict[str, Any]
+    """Payload for incoming content relevance data."""
+    data: Dict[str, Any] = Field(
+        ..., description="Raw metrics and keyword data for relevance analysis."
+    )
 
-    def __init__(self, **data):
-        super().__init__(**data)
-        model_logger.debug("Initialized ContentRelevanceRequest with data: %s", self.data)
+
+class PrioritySuggestions(BaseModel):
+    """Categorized content relevance suggestions by effort level."""
+    high: List[str] = Field(
+        ..., description="High-effort content relevance suggestion strings."
+    )
+    medium: List[str] = Field(
+        ..., description="Medium-effort content relevance suggestion strings."
+    )
+    low: List[str] = Field(
+        ..., description="Low-effort content relevance suggestion strings."
+    )
+
+
+class Recommendation(BaseModel):
+    """Wrapper for prioritized content relevance suggestions."""
+    priority_suggestions: PrioritySuggestions = Field(
+        ..., description="All content relevance suggestions categorized by effort level."
+    )
+
 
 class ContentRelevanceResponse(BaseModel):
-    success: bool
-    report: str
-    priorities: Dict[str, Any]
-
-    def __init__(self, **data):
-        super().__init__(**data)
-        model_logger.debug(
-            "Initialized ContentRelevanceResponse with success=%s, keys: %s",
-            self.success,
-            list(self.priorities.keys()) if self.priorities else []
-        )
+    """Response model for the combined content relevance endpoint."""
+    success: bool = Field(..., description="Indicates if the operation was successful.")
+    report: str = Field(..., description="Markdown-formatted content relevance report.")
+    priorities: PrioritySuggestions = Field(
+        ..., description="Categorized priority suggestions."
+    )
