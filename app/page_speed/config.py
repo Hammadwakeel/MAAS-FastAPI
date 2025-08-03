@@ -1,3 +1,4 @@
+import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from urllib.parse import quote_plus
 
@@ -44,7 +45,7 @@ class Settings(BaseSettings):
     # FastAPI Server Configuration
     # ───────────────────────────────────────────────────────────────────────────
     host: str = "0.0.0.0"
-    port: int = 8000
+    port: int = int(os.getenv("PORT", 8080))
     debug: bool = False
 
     # ───────────────────────────────────────────────────────────────────────────
