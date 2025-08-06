@@ -8,13 +8,13 @@ load_dotenv()
 
 def get_llm():
     """
-    Returns a ChatGroq LLM instance (Llama 3.3 70B) using the GROQ API key
+    Returns a ChatGroq LLM instance using the GROQ API key
     stored in the environment.
     """
     from langchain_groq import ChatGroq
 
     llm = ChatGroq(
-        model="meta-llama/llama-4-scout-17b-16e-instruct",
+        model="openai/gpt-oss-120b",
         temperature=0,
         max_tokens=1024,
         api_key=os.getenv("GROQ_API_KEY", "")  

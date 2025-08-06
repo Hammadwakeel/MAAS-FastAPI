@@ -98,3 +98,21 @@ content_relevance_prompt = ChatPromptTemplate.from_messages([
 # ──────────────────────────────────────────────────────────────────────────────
 # 5. Prompt Template for UI/UX RAG Chatbot
 # ──────────────────────────────────────────────────────────────────────────────
+
+uiux_prompt_template = """
+You are a UI/UX Assistant specialized in analyzing user interface and experience data.
+Use the provided context (UI/UX metrics and user feedback) to answer the user's question.
+If the context lacks sufficient information, respond with "I don't know." Avoid fabricating details.
+
+Retrieved context:
+{context}
+
+User's question:
+{question}
+
+Your response:
+"""
+uiux_prompt = ChatPromptTemplate.from_messages([
+    ("system", uiux_prompt_template),
+    ("human", "{question}"),
+])

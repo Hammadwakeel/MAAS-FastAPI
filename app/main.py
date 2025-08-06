@@ -17,7 +17,7 @@ from app.seo import routes as seo_routes
 from app.page_speed import routes as page_speed_routes
 from app.content_relevence import routes as content_relevance_routes
 from app.keywords.routes import router as keywords_router
-
+from app.uiux import routes as uiux_routes
 
 # app/suppress_warnings.py
 
@@ -89,6 +89,9 @@ app.include_router(page_speed_routes.router)
 
 # Mount the keywords router
 app.include_router(keywords_router)
+
+# Mount UI/UX router
+app.include_router(uiux_routes.router)
 
 # Add CORS middleware
 app.add_middleware(
