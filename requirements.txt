@@ -10,7 +10,4 @@ langchain_community
 faiss-cpu 
 pymongo 
 langchain-mongodb
-huggingface_hub
-sentence_transformers
 langchain_google_genai
-langchain_huggingface

@@ -7,7 +7,8 @@ from app.page_speed.config import settings
 # ──────────────────────────────────────────────────────────────────────────────
 
 # Connect to MongoDB using the URI from settings
-mongo_client = MongoClient(settings.mongo_uri)
+mongo_client = MongoClient("localhost", 27017)  # Use default MongoDB port
+# mongo_client = MongoClient(settings.mongo_uri)
 
 # Use the renamed settings attributes
 mongo_db = mongo_client[settings.mongo_db]

@@ -31,15 +31,32 @@ text_splitter = RecursiveCharacterTextSplitter(chunk_size=512, chunk_overlap=100
 # ──────────────────────────────────────────────────────────────────────────────
 
 
-HF_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+# HF_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
 
-from huggingface_hub import login
+# from huggingface_hub import login
 
-login(HF_TOKEN)
+# login(HF_TOKEN)
 
-model_name = "BAAI/bge-small-en-v1.5"
-model_kwargs = {"device": "cpu"}
-encode_kwargs = {"normalize_embeddings": True}
-embeddings = HuggingFaceEmbeddings(
-    model_name=model_name, model_kwargs=model_kwargs, encode_kwargs=encode_kwargs
+# model_name = "BAAI/bge-small-en-v1.5"
+# model_kwargs = {"device": "cpu"}
+# encode_kwargs = {"normalize_embeddings": True}
+# embeddings = HuggingFaceEmbeddings(
+#     model_name=model_name, model_kwargs=model_kwargs, encode_kwargs=encode_kwargs
+# )
+    
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 2. Embeddings Model (Google Gemini)
+# ──────────────────────────────────────────────────────────────────────────────
+GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY")
+if not GOOGLE_API_KEY:
+    raise ValueError("GOOGLE_API_KEY is not set in environment variables")
+
+embeddings = GoogleGenerativeAIEmbeddings(
+    model="models/gemini-embedding-001",
+    google_api_key=GOOGLE_API_KEY
 )

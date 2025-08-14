@@ -16,7 +16,8 @@ from .prompt_library import (
     page_speed_prompt,
     seo_prompt,
     content_relevance_prompt,
-    uiux_prompt
+    uiux_prompt,
+    mobile_usability_prompt
 )
 
 # 1. Path with doc_type
@@ -97,6 +98,8 @@ def build_rag_chain(
         user_prompt = content_relevance_prompt
     elif prompt_type == "uiux":
         user_prompt = uiux_prompt
+    elif prompt_type == "mobile_usability":
+        user_prompt = mobile_usability_prompt
     else:
         user_prompt = default_user_prompt
 

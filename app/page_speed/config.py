@@ -11,7 +11,6 @@ class Settings(BaseSettings):
     # ───────────────────────────────────────────────────────────────────────────
     pagespeed_api_key: str
     gemini_api_key: str
-    google_api_key1: str
 
 
     # ───────────────────────────────────────────────────────────────────────────
@@ -39,13 +38,13 @@ class Settings(BaseSettings):
         pw = quote_plus(self.mongo_password)
         return (
             f"mongodb+srv://{self.mongo_user}:{pw}@{self.mongo_host}/"
-            f"{self.mongo_db}?retryWrites=true&w=majority"
+            f"{self.mongo_db}?retryWrites=true&w=majority&ssl=true"
         )
     # ───────────────────────────────────────────────────────────────────────────
     # FastAPI Server Configuration
     # ───────────────────────────────────────────────────────────────────────────
     host: str = "0.0.0.0"
-    port: int = int(os.getenv("PORT", 8080))
+    port: int = os.getenv("port")
     debug: bool = False
 
     # ───────────────────────────────────────────────────────────────────────────

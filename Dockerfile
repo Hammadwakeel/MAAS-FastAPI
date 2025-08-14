@@ -4,14 +4,6 @@ FROM python:3.11-slim
 # Prevent Python from buffering stdout/stderr (so logs appear immediately)
 ENV PYTHONUNBUFFERED=1
 
-# Install system dependencies needed for certain Python packages (e.g., faiss, PyTorch CPU wheels)
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        build-essential \
-        git \
-        libgomp1 \
-    && rm -rf /var/lib/apt/lists/*
-
 # Set the working directory inside the container
 WORKDIR /app
 

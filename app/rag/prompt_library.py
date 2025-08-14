@@ -116,3 +116,25 @@ uiux_prompt = ChatPromptTemplate.from_messages([
     ("system", uiux_prompt_template),
     ("human", "{question}"),
 ])
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 6. Prompt Template for Mobile Usability RAG Chatbot
+# ──────────────────────────────────────────────────────────────────────────────
+
+mobile_usability_prompt_template = """
+You are a Mobile Usability Assistant specialized in analyzing mobile user experience data.
+Use the provided context (mobile usability metrics and user feedback) to answer the user's question.
+If the context lacks sufficient information, respond with "I don't know." Avoid fabricating details.
+
+Retrieved context:
+{context}
+
+User's question:
+{question}
+
+Your response:
+"""
+mobile_usability_prompt = ChatPromptTemplate.from_messages([
+    ("system", mobile_usability_prompt_template),
+    ("human", "{question}"),
+])
