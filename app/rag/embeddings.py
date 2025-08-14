@@ -1,5 +1,4 @@
 import os
-from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from dotenv import load_dotenv
 
@@ -27,23 +26,9 @@ def get_llm():
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=512, chunk_overlap=100)
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 2. Embeddings Model (HuggingFace BGE) on CPU
+# 2. Embeddings Model
 # ──────────────────────────────────────────────────────────────────────────────
 
-
-# HF_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
-
-# from huggingface_hub import login
-
-# login(HF_TOKEN)
-
-# model_name = "BAAI/bge-small-en-v1.5"
-# model_kwargs = {"device": "cpu"}
-# encode_kwargs = {"normalize_embeddings": True}
-# embeddings = HuggingFaceEmbeddings(
-#     model_name=model_name, model_kwargs=model_kwargs, encode_kwargs=encode_kwargs
-# )
-    
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from dotenv import load_dotenv
 

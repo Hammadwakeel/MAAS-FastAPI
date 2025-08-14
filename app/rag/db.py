@@ -7,8 +7,7 @@ from app.page_speed.config import settings
 # ──────────────────────────────────────────────────────────────────────────────
 
 # Connect to MongoDB using the URI from settings
-mongo_client = MongoClient("localhost", 27017)  # Use default MongoDB port
-# mongo_client = MongoClient(settings.mongo_uri)
+mongo_client = MongoClient(settings.mongo_uri)
 
 # Use the renamed settings attributes
 mongo_db = mongo_client[settings.mongo_db]
@@ -18,3 +17,22 @@ vectorstore_meta_coll = mongo_db["vectorstore_metadata"]
 
 # Name of the collection that MongoDBChatMessageHistory will write to
 chat_collection_name = settings.mongo_collection
+
+
+# # ____________________________________________________________
+# #Local MongoDB Connection
+# # ____________________________________________________________
+
+# # db.py
+# from pymongo import MongoClient
+# from app.page_speed.config import settings
+
+# # Always connect to local MongoDB
+# mongo_client = MongoClient("mongodb://localhost:27017/")
+
+# # Select the database from settings
+# mongo_db = mongo_client[settings.mongo_db]
+
+# # Collections
+# vectorstore_meta_coll = mongo_db["vectorstore_metadata"]
+# chat_collection_name = settings.mongo_collection
