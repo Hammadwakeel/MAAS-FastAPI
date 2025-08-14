@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     # FastAPI Server Configuration
     # ───────────────────────────────────────────────────────────────────────────
     host: str = "0.0.0.0"
-    port: int = os.getenv("port")
+    port: int = int(os.getenv("port", 8080))
     debug: bool = False
 
     # ───────────────────────────────────────────────────────────────────────────
