@@ -149,14 +149,12 @@ async def internal_error_handler(request, exc):
 if __name__ == "__main__":
     import uvicorn
 
-    # Force Cloud Run compatible host/port
-    host = os.getenv("HOST", "0.0.0.0")
-    port = int(os.getenv("PORT", settings.port if settings.port else 8080))
+    import os
 
-    logger.info(f"Starting Uvicorn with host={host}, port={port}")
+    port = int(os.environ.get("PORT", 8080))
     uvicorn.run(
         "app.main:app",
-        host=host,
-        port=port,
-        reload=settings.debug
+        host="0.0.0.0",
+        port=port
     )
+
