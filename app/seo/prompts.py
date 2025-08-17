@@ -19,6 +19,10 @@ Return *only* a JSON object that has a single top-level key, `priority_suggestio
 
 Each list item must be a **plain-English sentence**, prefixed with its SEO category tag (e.g. `[On-Page]` or `[Schema]`), and suffixed with `(Effort Level: high|medium|low)`.
 
+Important:
+- Respond with *only* a valid JSON object.
+- Do NOT include any commentary or explanation outside the JSON.
+
 {format_instructions}
 
 Performance Report:

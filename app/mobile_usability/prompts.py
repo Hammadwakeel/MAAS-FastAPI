@@ -31,6 +31,10 @@ Formatting rules:
 - Each list may contain zero or more items, but critical items must appear in "high".
 - Ensure items are specific enough for a developer to action (mention affected selector(s) when possible).
 
+Important:
+- Respond with *only* a valid JSON object.
+- Do NOT include any commentary or explanation outside the JSON.
+
 {format_instructions}
 
 Use the following to guide prioritization:

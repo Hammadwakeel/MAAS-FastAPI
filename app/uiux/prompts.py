@@ -21,6 +21,10 @@ Requirements:
 6. Ensure the output is strictly JSON—no additional text, comments, or keys.
 7. Validate JSON syntax: keys and strings must be enclosed in double quotes.
 
+Important:
+- Respond with *only* a valid JSON object.
+- Do NOT include any commentary or explanation outside the JSON.
+
 {format_instructions}
 
 Input Report Data:

@@ -119,6 +119,24 @@ async def health_check():
         uptime=uptime_str
     )
 
+# from app.rag.utils import cleanup_old_vectorstores
+
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     global startup_time
+#     startup_time = time.time()
+#     logger.info("🚀 Starting %s v%s", settings.app_name, settings.app_version)
+#     logger.info("📊 Server will run on %s:%s", settings.host, settings.port)
+
+#     # Trigger cleanup on startup
+#     deleted = cleanup_old_vectorstores(days=7)
+#     logger.info("🧹 Cleanup complete. %s old sessions removed.", deleted)
+
+#     yield
+
+#     logger.info("📊 Shutting down %s", settings.app_name)
+
+
 @app.exception_handler(404)
 async def not_found_handler(request, exc):
     logger.warning("404 Not Found: %s %s", request.method, request.url.path)

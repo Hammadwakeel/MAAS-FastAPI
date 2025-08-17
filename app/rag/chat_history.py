@@ -1,12 +1,10 @@
-import os
 import time
 from typing import List, Dict, Any
 from pymongo import ReturnDocument
 
 from app.page_speed.config import settings
-from .db import mongo_client, chat_collection_name
+from .db import mongo_client, chat_collection_name, qdrant_client
 from .embeddings import get_llm
-from .utils import get_vectorstore_path  # make sure this util is available
 from langchain.prompts import ChatPromptTemplate
 from .logging_config import logger
 
@@ -20,6 +18,7 @@ summarization_prompt = ChatPromptTemplate.from_messages([
     ("system", "Summarize the following conversation into a concise summary:"),
     ("human", "{chat_history}")
 ])
+
 
 class ChatHistoryManager:
     @staticmethod
@@ -82,13 +81,13 @@ class ChatHistoryManager:
         return True
 
     @staticmethod
-    def vectorstore_exists(user_id: str) -> bool:
+    def vectorstore_exists(collection_name: str) -> bool:
         """
-        Check if a vectorstore directory already exists for this user.
+        Check if a Qdrant collection exists instead of local FAISS path.
         """
-        path = get_vectorstore_path(user_id)
-        exists = os.path.isdir(path)
-        logger.debug("Vectorstore path %s exists: %s", path, exists)
+        collections = qdrant_client.get_collections().collections
+        exists = any(c.name == collection_name for c in collections)
+        logger.debug("Qdrant collection %s exists: %s", collection_name, exists)
         return exists
 
     @staticmethod

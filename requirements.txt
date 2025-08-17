@@ -7,7 +7,7 @@ pydantic
 pydantic_settings
 langchain_groq 
 langchain_community 
-faiss-cpu 
 pymongo 
 langchain-mongodb
 langchain_google_genai
+qdrant-client
