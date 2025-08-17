@@ -32,14 +32,17 @@ class Settings(BaseSettings):
     mongo_host: str
     mongo_db: str = "MAAS"
     mongo_collection: str = "chat_histories"
-
+    
     @property
     def mongo_uri(self) -> str:
+        """
+        Return a mongodb+srv URI for use with MongoClient.
+        Do NOT include ssl=true in the URI; we'll pass tls and CA explicitly to MongoClient.
+        """
         pw = quote_plus(self.mongo_password)
-        return (
-            f"mongodb+srv://{self.mongo_user}:{pw}@{self.mongo_host}/"
-            f"{self.mongo_db}?retryWrites=true&w=majority&ssl=true"
-        )
+        # keep retryWrites and w=majority; do not append ssl/tls params here
+        return f"mongodb+srv://{self.mongo_user}:{pw}@{self.mongo_host}/{self.mongo_db}?retryWrites=true&w=majority"
+
 
 
     # ───────────────────────────────────────────────────────────────────────────
