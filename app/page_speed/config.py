@@ -35,18 +35,18 @@ class Settings(BaseSettings):
 
     @property
     def mongo_uri(self) -> str:
-        # pw = quote_plus(self.mongo_password)
-        # return (
-        #     f"mongodb+srv://{self.mongo_user}:{pw}@{self.mongo_host}/"
-        #     f"{self.mongo_db}?retryWrites=true&w=majority&ssl=true"
-        # )
+        pw = quote_plus(self.mongo_password)
+        return (
+            f"mongodb+srv://{self.mongo_user}:{pw}@{self.mongo_host}/"
+            f"{self.mongo_db}?retryWrites=true&w=majority&ssl=true"
+        )
 
 
     # ───────────────────────────────────────────────────────────────────────────
     # local MongoDB Connection
     # ───────────────────────────────────────────────────────────────────────────
      
-        return f"mongodb://localhost:27017/{self.mongo_db}"
+        # return f"mongodb://localhost:27017/{self.mongo_db}"
     
 
     # ───────────────────────────────────────────────────────────────────────────
