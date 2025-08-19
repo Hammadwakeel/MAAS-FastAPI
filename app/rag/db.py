@@ -6,6 +6,7 @@ from typing import Optional
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError, ConfigurationError
 import certifi
+from qdrant_client import QdrantClient  # Add this import
 
 from app.page_speed.config import settings
 
