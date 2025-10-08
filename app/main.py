@@ -21,7 +21,7 @@ from app.content_relevence import routes as content_relevance_routes
 from app.keywords.routes import router as keywords_router
 from app.uiux import routes as uiux_routes
 from app.mobile_usability import routes as mobile_usability
-
+from app.ads.persona_routes import router as persona_router
 # ─────────────────────────────────────────────
 # Suppress warnings
 # ─────────────────────────────────────────────
@@ -82,6 +82,7 @@ app.include_router(page_speed_routes.router)
 app.include_router(keywords_router)
 app.include_router(uiux_routes.router)
 app.include_router(mobile_usability.router)
+app.include_router(persona_router)
 
 # CORS
 app.add_middleware(
