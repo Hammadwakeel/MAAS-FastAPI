@@ -21,8 +21,6 @@ class Settings(BaseSettings):
     # ───────────────────────────────────────────────────────────────────────────
     # Chat & RAG Configuration
     # ───────────────────────────────────────────────────────────────────────────
-    groq_api_key: str
-    vectorstore_base_path: str = "./vectorstores"
 
     # ───────────────────────────────────────────────────────────────────────────
     # MongoDB Configuration (Local)
