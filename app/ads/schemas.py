@@ -1,7 +1,7 @@
-# app/ads/schemas.py
 from enum import Enum
 from pydantic import BaseModel, Field
 from typing import List, Optional
+from uuid import uuid4
 
 class GoalEnum(str, Enum):
     GET_MORE_WEBSITE_VISITORS = (
@@ -28,6 +28,8 @@ class GoalEnum(str, Enum):
         return obj
 
 class Persona(BaseModel):
+    uuid: str = Field(default_factory=lambda: str(uuid4()), description="Unique identifier for this persona")
+    flag: bool = Field(False, description="Boolean flag for client use (defaults to False)")
     name: str
     headline: str
     age_range: str
@@ -102,3 +104,30 @@ class ImageRequest(BaseModel):
     style: Optional[str] = Field("modern", description="Desired art style or mood (e.g. modern, minimal, illustrative)")
     width: Optional[int] = Field(1200, description="Image width in px")
     height: Optional[int] = Field(628, description="Image height in px")
+
+
+
+class BudgetType(str, Enum):
+    daily = "daily"
+    lifetime = "lifetime"
+
+
+class BudgetPlan(BaseModel):
+    type: BudgetType
+    budget: str
+    duration: str
+
+
+class BudgetRequest(BaseModel):
+    business_name: str = Field(..., example="GrowthAspired")
+    business_category: str = Field(..., example="Software House")
+    business_description: str
+    promotion_type: str
+    offer_description: str
+    value: str
+    main_goal: GoalEnum = Field(..., description="Primary marketing goal (enum)")
+    serving_clients_info: str
+    serving_clients_location: str
+    selected_personas: List[Persona] = Field(..., description="List of selected persona objects to target")
+    # optional override if you want more/less options in future
+    num_options: Optional[int] = Field(2, description="Number of budget option groups to return (default 2)")
