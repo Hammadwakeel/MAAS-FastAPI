@@ -12,7 +12,6 @@ from app.ads.schemas import HeadingsRequest, Persona
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
-# Ensure Gemini SDK is configured (harmless if already configured elsewhere)
 API_KEY = os.getenv("GEMINI_API_KEY")
 if not API_KEY:
     logger.error("GEMINI_API_KEY not set; headings generation will fail if called without configuration.")
@@ -23,31 +22,25 @@ else:
     except Exception as e:
         logger.exception("Failed to configure google.generativeai in headings service: %s", e)
 
-
 def _extract_json_array(raw: str) -> str:
-    """
-    Return the first JSON array substring from raw (from '[' to ']') to be robust
-    against extra commentary in model output.
-    """
     start = raw.find('[')
     end = raw.rfind(']')
     if start != -1 and end != -1 and end > start:
         return raw[start:end + 1]
     return raw
 
-
 def _build_headings_prompt(req: HeadingsRequest) -> str:
-    """
-    Build a clear prompt asking Gemini to return ONLY a JSON array of strings (headings).
-    """
-    # Convert selected_personas to compact JSON for context
     personas_json = json.dumps([p.dict() for p in req.selected_personas], indent=2)
 
     main_goal_value = req.main_goal.value
     main_goal_desc = getattr(req.main_goal, "description", "")
+    tone_enum = getattr(req, "tone", None)
+    tone_value = tone_enum.value if tone_enum is not None else "Professional"
 
     prompt = f"""
 You are an expert copywriter specialized in short, high-converting ad headlines for digital ads.
+
+Tone: Use a "{tone_value}" tone for all headings. If tone is "Professional", keep headlines formal and trustworthy. If "Casual / Friendly", keep them approachable. If "Bold / Persuasive", use urgency and commanding language. If "Inspiring / Visionary", use aspirational language.
 
 Task:
 Produce exactly {req.num_headings} short, punchy ad headings (strings) for a paid ad campaign that target the selected personas and align with the business goal. RETURN ONLY a JSON array of strings (e.g. ["Heading 1", "Heading 2", ...]) and nothing else.
@@ -55,7 +48,6 @@ Produce exactly {req.num_headings} short, punchy ad headings (strings) for a pai
 Requirements:
 - Each heading should be concise (max ~60 characters), benefit-focused, and tailored to the provided personas and business goal.
 - Use active language and mention the key value when appropriate (e.g., "scale", "AI", "launch", "MVP", "secure funding", "reduce time-to-market").
-- Vary the tone across the 4 headings (e.g., urgent, aspirational, trust-building, and practical).
 - Avoid punctuation-only headlines, and do not include numbering in text.
 - If the main goal is "{main_goal_value}", use that intention as a primary framing. Goal description: {main_goal_desc}
 
@@ -75,14 +67,10 @@ Selected persona(s) (use these to shape headings):
 
 Now generate exactly {req.num_headings} unique ad headings as a JSON array of strings. No explanation, no extra text.
 """
-    logger.debug("Built headings prompt (len=%d) for business '%s'", len(prompt), req.business_name)
+    logger.debug("Built headings prompt (len=%d) for business '%s' (tone=%s)", len(prompt), req.business_name, tone_value)
     return prompt.strip()
 
-
 def generate_headings(req: HeadingsRequest) -> List[str]:
-    """
-    Call Gemini to generate ad headings and return list[str].
-    """
     prompt = _build_headings_prompt(req)
 
     model_name = "gemini-2.5-pro"
@@ -104,7 +92,6 @@ def generate_headings(req: HeadingsRequest) -> List[str]:
         logger.exception("Gemini generate_content failed for headings")
         raise RuntimeError(f"Gemini request failed: {e}")
 
-    # Extract raw text from response
     raw = None
     try:
         if response and hasattr(response, "text") and response.text:
@@ -129,7 +116,6 @@ def generate_headings(req: HeadingsRequest) -> List[str]:
         logger.error("Empty response from Gemini when generating headings")
         raise RuntimeError("Empty response from Gemini")
 
-    # Robust JSON extraction & parsing
     snippet = _extract_json_array(raw)
     try:
         parsed = json.loads(snippet)
@@ -141,7 +127,6 @@ def generate_headings(req: HeadingsRequest) -> List[str]:
         logger.error("Parsed headings JSON is not a list of strings. Parsed type: %s", type(parsed))
         raise RuntimeError("Gemini did not return a JSON array of strings as expected.")
 
-    # Normalize: ensure exactly num_headings items
     headings = parsed
     if len(headings) < req.num_headings:
         logger.warning("Gemini returned %d headings; expected %d. Returning what we have.",
@@ -150,7 +135,6 @@ def generate_headings(req: HeadingsRequest) -> List[str]:
         headings = headings[: req.num_headings]
         logger.debug("Trimmed headings to requested num_headings=%d", req.num_headings)
 
-    # Final basic cleanup (strip whitespace)
     headings = [h.strip() for h in headings]
 
     logger.info("Generated %d headings for business '%s'", len(headings), req.business_name)

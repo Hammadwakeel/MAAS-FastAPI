@@ -3,12 +3,22 @@ from fastapi import APIRouter, HTTPException
 from typing import List
 from fastapi.responses import StreamingResponse
 
-from app.ads.schemas import BusinessInput, Persona, RegenerateRequest, HeadingsRequest, DescriptionsRequest, ImageRequest
+from app.ads.schemas import (
+    BusinessInput,
+    Persona,
+    RegenerateRequest,
+    HeadingsRequest,
+    DescriptionsRequest,
+    ImageRequest,
+    BudgetRequest,
+    BudgetPlan,
+)
 import io
 import app.ads.image_service as image_service
 import app.ads.headings_service as headings_service
 import app.ads.descriptions_service as descriptions_service
-from app.ads.persona_service import generate_personas , regenerate_personas
+from app.ads.persona_service import generate_personas, regenerate_personas
+from app.ads.budget_service import generate_budget_plans
 
 router = APIRouter(prefix="/Ads", tags=["Ads"])
 
@@ -29,7 +39,6 @@ def regenerate_personas_endpoint(payload: RegenerateRequest):
     try:
         personas = regenerate_personas(payload, payload.previous_personas)
     except Exception as e:
-        # return the error message to the client for quick debugging
         raise HTTPException(status_code=500, detail=str(e))
     return personas
 
@@ -41,7 +50,6 @@ def create_headings(payload: HeadingsRequest):
     try:
         return headings_service.generate_headings(payload)
     except Exception as e:
-        # Log error server-side; return HTTP 500 with message for debugging
         raise HTTPException(status_code=500, detail=str(e))
     
 @router.post("/Descriptions", response_model=List[str])
@@ -59,5 +67,16 @@ def create_image(payload: ImageRequest):
     try:
         img_bytes, mime = image_service.generate_image(payload)
         return StreamingResponse(io.BytesIO(img_bytes), media_type=mime)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/price", response_model=List[BudgetPlan])
+def create_budget_options(payload: BudgetRequest):
+    """
+    Generate two budget options (daily & lifetime) for ad campaigns based on business inputs.
+    """
+    try:
+        plans = generate_budget_plans(payload)
+        return plans
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

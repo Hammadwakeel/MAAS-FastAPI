@@ -12,7 +12,6 @@ from app.ads.schemas import DescriptionsRequest, Persona
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
-# Ensure genai configured (harmless if already configured elsewhere)
 API_KEY = os.getenv("GEMINI_API_KEY")
 if API_KEY:
     try:
@@ -21,7 +20,6 @@ if API_KEY:
     except Exception:
         logger.exception("Failed to configure google.generativeai in descriptions service")
 
-
 def _extract_json_array(raw: str) -> str:
     start = raw.find('[')
     end = raw.rfind(']')
@@ -29,11 +27,7 @@ def _extract_json_array(raw: str) -> str:
         return raw[start:end + 1]
     return raw
 
-
 def _build_descriptions_prompt(req: DescriptionsRequest) -> str:
-    """
-    Build prompt asking Gemini to return ONLY a JSON array of strings (ad descriptions).
-    """
     try:
         personas_json = json.dumps([p.dict() for p in req.selected_personas], indent=2)
     except Exception:
@@ -41,17 +35,20 @@ def _build_descriptions_prompt(req: DescriptionsRequest) -> str:
 
     main_goal_value = req.main_goal.value
     main_goal_desc = getattr(req.main_goal, "description", "")
+    tone_enum = getattr(req, "tone", None)
+    tone_value = tone_enum.value if tone_enum is not None else "Professional"
 
     prompt = f"""
 You are an expert ad copywriter specialized in short, high-converting ad descriptions for digital ads.
+
+Tone: Use a "{tone_value}" tone for all descriptions. If tone is "Professional", write concise, formal copy. If "Casual / Friendly", be approachable and conversational. If "Bold / Persuasive", use urgency and strong value statements. If "Inspiring / Visionary", use motivational and future-focused language.
 
 Task:
 Produce exactly {req.num_descriptions} ad descriptions (each 1-2 short sentences) tailored to the business and the selected persona(s). RETURN ONLY a JSON array of strings (e.g. ["Desc 1", "Desc 2", ...]) and nothing else.
 
 Requirements:
 - Each description should be concise (max ~140 characters preferred), benefit-focused, and aligned with the business value and main goal.
-- Vary tone across descriptions (e.g., urgent, aspirational, trust-building, practical).
-- Include the main value or offer where appropriate (e.g., "MVP development", "AI integration", "fast time-to-market", "trusted SaaS partner").
+- Include the main value or offer where appropriate.
 - If the selected personas have different priorities, generate descriptions that address those priorities.
 - Goal: "{main_goal_value}" — {main_goal_desc}
 
@@ -71,9 +68,8 @@ Selected persona(s) (use these to shape descriptions):
 
 Now generate exactly {req.num_descriptions} unique ad descriptions as a JSON array of strings. No explanation, no extra text.
 """
-    logger.debug("Built descriptions prompt (len=%d) for business '%s'", len(prompt), req.business_name)
+    logger.debug("Built descriptions prompt (len=%d) for business '%s' (tone=%s)", len(prompt), req.business_name, tone_value)
     return prompt.strip()
-
 
 def generate_descriptions(req: DescriptionsRequest) -> List[str]:
     prompt = _build_descriptions_prompt(req)
@@ -97,7 +93,6 @@ def generate_descriptions(req: DescriptionsRequest) -> List[str]:
         logger.exception("Gemini generate_content failed for descriptions")
         raise RuntimeError(f"Gemini request failed: {e}")
 
-    # extract raw text
     raw = None
     try:
         if response and hasattr(response, "text") and response.text:
