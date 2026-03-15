@@ -4,11 +4,6 @@ An advanced **Marketing-as-a-Service (MaaS)** backend built with FastAPI. This e
 
 ## Project Demo
 
-<div align="center">
-  <video src="https://github.com/Hammadwakeel/MAAS-FastAPI/raw/main/MAAS.mp4" width="100%" controls>
-    Your browser does not support the video tag.
-  </video>
-</div>
 
 ## Project Links
 
