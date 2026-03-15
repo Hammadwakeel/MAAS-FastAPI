@@ -1,15 +1,23 @@
-# 🚀 MaaS (Marketing as a Service) - AI-Powered Marketing Engine
+# MaaS (Marketing as a Service) - AI-Powered Marketing Engine
 
 An advanced **Marketing-as-a-Service (MaaS)** backend built with FastAPI. This engine automates comprehensive website audits and manages AI-driven Meta Ads campaigns by leveraging Retrieval-Augmented Generation (RAG) and generative AI agents.
 
-## 🔗 Project Links
+## Project Demo
+
+[https://github.com/Hammadwakeel/MAAS-FastAPI/user-attachments/assets/72d73359-541a-495c-9730-a887b2862e3d](https://www.google.com/search?q=https://github.com/Hammadwakeel/MAAS-FastAPI/user-attachments/assets/72d73359-541a-495c-9730-a887b2862e3d)
+
+*(Note: If the video doesn't load instantly, you can also view it [directly here](https://github.com/Hammadwakeel/MAAS-FastAPI/blob/main/MAAS.mp4))*
+
+---
+
+## Project Links
 
 * **GitHub Repository:** [Hammadwakeel/MAAS-FastAPI](https://www.google.com/search?q=https://github.com/Hammadwakeel/MAAS-FastAPI)
 * **Backend Framework:** FastAPI
 
 ---
 
-## 🌟 Detailed Key Features
+## Detailed Key Features
 
 ### 1. Intelligent Website Audit Suite (RAG-Enabled)
 
@@ -49,26 +57,26 @@ Moves beyond simple templates by using **Agentic Workflows** to build entire mar
 
 ---
 
-## 📂 Folder Structure
+## Folder Structure
 
 ```text
 MAAS-FASTAPI
 ├── app/
-│   ├── ads/                  # Meta Ads Persona & Creative logic
-│   ├── content_relevence/    # Content audit & AI feedback
-│   ├── keywords/             # Keyword research agents
-│   ├── mobile_usability/     # Mobile optimization services
-│   ├── page_speed/           # PageSpeed Insights integration
-│   ├── rag/                  # Core RAG logic & Vector Store utilities
-│   ├── seo/                  # Technical SEO auditing
-│   ├── uiux/                 # UI/UX analysis services
-│   └── main.py               # FastAPI Entry point
+│   ├── ads/                  # Meta Ads Persona & Creative logic
+│   ├── content_relevence/    # Content audit & AI feedback
+│   ├── keywords/             # Keyword research agents
+│   ├── mobile_usability/     # Mobile optimization services
+│   ├── page_speed/           # PageSpeed Insights integration
+│   ├── rag/                  # Core RAG logic & Vector Store utilities
+│   ├── seo/                  # Technical SEO auditing
+│   ├── uiux/                 # UI/UX analysis services
+│   └── main.py               # FastAPI Entry point
 
 ```
 
 ---
 
-## ⚙️ Environment Variables
+## Environment Variables
 
 To run this project, you will need to add the following variables to your `.env` file:
 
@@ -79,42 +87,36 @@ To run this project, you will need to add the following variables to your `.env`
 
 **MongoDB Configuration**
 
-* `MONGO_USER`
-* `MONGO_PASSWORD`
-* `MONGO_HOST`
-* `MONGO_DB`
-* `MONGO_COLLECTION`
+* `MONGO_USER`, `MONGO_PASSWORD`, `MONGO_HOST`, `MONGO_DB`, `MONGO_COLLECTION`
 
 **FastAPI Server Configuration**
 
-* `HOST`
-* `PORT`
-* `DEBUG`
+* `HOST`, `PORT`, `DEBUG`
 
 **Qdrant Configuration**
 
-* `QDRANT_URL`
-* `QDRANT_API_KEY`
+* `QDRANT_URL`, `QDRANT_API_KEY`
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 1. **Clone the Repo:**
+
 ```bash
 git clone https://github.com/Hammadwakeel/MAAS-FastAPI.git
 
 ```
 
-
 2. **Install Dependencies:**
+
 ```bash
 pip install -r requirements.txt
 
 ```
 
-
 3. **Run the server:**
+
 ```bash
 uvicorn app.main:app --host 0.0.0.0 --port 8080
 
